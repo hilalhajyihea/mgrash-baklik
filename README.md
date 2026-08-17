@@ -18,7 +18,7 @@ npm run dev
 
 - דף בית: `/`
 - מגרש דמו: `/ramat-gan`
-- כניסת בעל מגרש: `/ramat-gan/login` (משתמש `ramatgan` / סיסמת `DEMO_FIELD_PASSWORD`)
+- כניסת בעל מגרש: `/ramat-gan/login` (משתמש `ramatgan` / סיסמת `ramat123`)
 - מנהל מערכת: `/platform/login`
 
 ## זרימת שריון

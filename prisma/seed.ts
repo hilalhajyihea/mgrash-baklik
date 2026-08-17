@@ -15,12 +15,12 @@ const defaultHours = [
 ];
 
 async function main() {
-  const demoPassword = process.env.DEMO_FIELD_PASSWORD || "field123";
+  const demoPassword = process.env.DEMO_FIELD_PASSWORD || "ramat123";
   const passwordHash = await hash(demoPassword, 12);
 
   const field = await prisma.field.upsert({
     where: { slug: "ramat-gan" },
-    update: {},
+    update: { passwordHash },
     create: {
       slug: "ramat-gan",
       displayName: "מגרש רמת גן",

@@ -20,7 +20,7 @@ services:
       - key: PLATFORM_PASSWORD
         sync: false
       - key: DEMO_FIELD_PASSWORD
-        value: field123
+        value: ramat123
       - key: CRON_SECRET
         generateValue: true
       - key: SMS_019_USERNAME
