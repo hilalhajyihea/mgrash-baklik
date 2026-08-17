@@ -196,17 +196,77 @@ export async function createAdminBooking(input: {
   });
 }
 
+export type HoldPreview =
+  | {
+      kind: "hold";
+      fieldName: string;
+      startsAt: Date;
+      customerName: string;
+    }
+  | {
+      kind: "confirmed";
+      fieldName: string;
+      startsAt: Date;
+    }
+  | { kind: "expired" | "cancelled" | "missing" };
+
+async function loadBookingByToken(rawToken: string) {
+  await expireHolds();
+  return prisma.booking.findUnique({
+    where: { confirmToken: rawToken },
+    include: { field: { select: { displayName: true } } },
+  });
+}
+
+function classifyBooking(
+  booking: NonNullable<Awaited<ReturnType<typeof loadBookingByToken>>>,
+): HoldPreview {
+  if (booking.status === "CONFIRMED") {
+    return {
+      kind: "confirmed",
+      fieldName: booking.field.displayName,
+      startsAt: booking.startsAt,
+    };
+  }
+  if (booking.status === "CANCELLED") return { kind: "cancelled" };
+  if (booking.status !== "HOLD") return { kind: "expired" };
+  if (booking.holdExpiresAt && booking.holdExpiresAt < new Date()) {
+    return { kind: "expired" };
+  }
+  return {
+    kind: "hold",
+    fieldName: booking.field.displayName,
+    startsAt: booking.startsAt,
+    customerName: booking.customerName,
+  };
+}
+
+/** Read-only: used by GET /confirm so SMS previews cannot approve a hold. */
+export async function peekHold(rawToken: string): Promise<HoldPreview> {
+  const booking = await loadBookingByToken(rawToken);
+  if (!booking) return { kind: "missing" };
+
+  if (
+    booking.status === "HOLD" &&
+    booking.holdExpiresAt &&
+    booking.holdExpiresAt < new Date()
+  ) {
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: { status: "EXPIRED" },
+    });
+    return { kind: "expired" };
+  }
+
+  return classifyBooking(booking);
+}
+
 export type ConfirmResult =
   | { ok: true; status: "CONFIRMED"; already: boolean; fieldName: string; startsAt: Date }
   | { ok: false; reason: "missing" | "expired" | "cancelled" };
 
 export async function confirmHold(rawToken: string): Promise<ConfirmResult> {
-  await expireHolds();
-
-  const booking = await prisma.booking.findUnique({
-    where: { confirmToken: rawToken },
-    include: { field: { select: { displayName: true } } },
-  });
+  const booking = await loadBookingByToken(rawToken);
 
   if (!booking) return { ok: false, reason: "missing" };
   if (booking.status === "CONFIRMED") {
