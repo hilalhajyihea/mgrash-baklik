@@ -1,0 +1,47 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: mgrash-baklik
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npx prisma db push --accept-data-loss && npx tsx prisma/seed.ts && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: PLATFORM_USERNAME
+        value: admin
+      - key: PLATFORM_PASSWORD
+        sync: false
+      - key: DEMO_FIELD_PASSWORD
+        value: field123
+      - key: CRON_SECRET
+        generateValue: true
+      - key: SMS_019_USERNAME
+        sync: false
+      - key: SMS_019_TOKEN
+        sync: false
+      - key: SMS_019_SOURCE
+        sync: false
+
+  - type: cron
+    name: mgrash-baklik-expire-holds
+    runtime: node
+    plan: free
+    region: frankfurt
+    schedule: "*/5 * * * *"
+    buildCommand: "true"
+    startCommand: node -e "fetch(process.env.APP_URL+'/api/cron/expire-holds',{headers:{authorization:'Bearer '+process.env.CRON_SECRET}}).then(async r=>{console.log(await r.text()); if(!r.ok) process.exit(1)}).catch(e=>{console.error(e); process.exit(1)})"
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: APP_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false

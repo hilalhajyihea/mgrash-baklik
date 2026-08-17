@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Field {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  displayName    String
+  username       String   @unique
+  passwordHash   String
+  isActive       Boolean  @default(true)
+  /// Rental slot length in minutes (usually 60 or 90)
+  slotMinutes    Int      @default(60)
+  /// How long a public hold waits for SMS confirmation
+  holdMinutes    Int      @default(15)
+  /// Platform admin: allows this field to send customer SMS
+  smsPlanEnabled Boolean  @default(false)
+  /// Owner mobile (optional, for later alerts)
+  phone          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workingHours WorkingHours[]
+  dayOffs      DayOff[]
+  bookings     Booking[]
+}
+
+model WorkingHours {
+  id        String @id @default(cuid())
+  fieldId   String
+  /// 0 = Sunday … 6 = Saturday (Israel week)
+  dayOfWeek Int
+  startTime String
+  endTime   String
+
+  field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([fieldId, dayOfWeek])
+  @@index([fieldId])
+}
+
+model DayOff {
+  id      String   @id @default(cuid())
+  fieldId String
+  date    DateTime @db.Date
+  note    String?
+
+  field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([fieldId, date])
+  @@index([fieldId])
+}
+
+model Booking {
+  id            String    @id @default(cuid())
+  fieldId       String
+  startsAt      DateTime
+  endsAt        DateTime
+  customerName  String
+  customerPhone String
+  /// HOLD | CONFIRMED | EXPIRED | CANCELLED
+  status        String    @default("HOLD")
+  /// PUBLIC | ADMIN
+  source        String    @default("PUBLIC")
+  confirmToken  String    @unique
+  holdExpiresAt DateTime?
+  confirmedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@index([fieldId, startsAt])
+  @@index([fieldId, status])
+  @@index([status, holdExpiresAt])
+}
