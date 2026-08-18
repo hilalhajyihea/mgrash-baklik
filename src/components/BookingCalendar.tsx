@@ -141,7 +141,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
           )}
           <div className="flood-line mt-5" />
           <p className="mt-4 max-w-md text-base text-[rgba(244,248,238,0.82)] sm:text-lg">
-            اختاروا التاريخ والساعة، وأدخلوا الاسم والهاتف. يُغلق الحجز فقط بعد الضغط على رابط SMS.
+            اختاروا التاريخ والساعة، وأدخلوا الاسم والهاتف. الحجز يكون نهائي بعد الضغط على الرابط الذي سيصلكم عبر SMS.
           </p>
         </header>
       </section>
