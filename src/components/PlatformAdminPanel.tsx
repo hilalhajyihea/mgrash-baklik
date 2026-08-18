@@ -14,6 +14,8 @@ type FieldRow = {
   slotMinutes: number;
   holdMinutes: number;
   smsPlanEnabled: boolean;
+  logoUrl: string | null;
+  logoMimeType: string | null;
   _count: { bookings: number };
 };
 
@@ -87,6 +89,45 @@ export function PlatformAdminPanel() {
       return;
     }
     setMessage(okMsg);
+    load();
+  }
+
+  async function uploadLogo(field: FieldRow, file: File | null) {
+    if (!file) return;
+    setError("");
+    const form = new FormData();
+    form.set("fieldId", field.id);
+    form.set("file", file);
+    const res = await fetch("/api/platform/fields/logo", {
+      method: "POST",
+      body: form,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "העלאת לוגו נכשלה");
+      return;
+    }
+    setMessage(`לוגו עודכן ל־${field.displayName}`);
+    load();
+  }
+
+  async function removeLogo(field: FieldRow) {
+    if (!field.logoMimeType && !field.logoUrl) return;
+    if (!confirm(`להסיר את הלוגו של ${field.displayName}? השם יוצג שוב באתר.`)) {
+      return;
+    }
+    setError("");
+    const res = await fetch("/api/platform/fields/logo", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: field.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "הסרת לוגו נכשלה");
+      return;
+    }
+    setMessage(`הלוגו הוסר — באתר יוצג שוב השם: ${field.displayName}`);
     load();
   }
 
@@ -173,23 +214,62 @@ export function PlatformAdminPanel() {
             key={field.id}
             className="surface-dark flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div>
-              <p className="font-semibold">{field.displayName}</p>
-              <p className="text-sm text-[rgba(244,248,238,0.62)]">
-                <Link href={`/${field.slug}`} className="underline">
-                  /{field.slug}
-                </Link>
-                {" · "}
-                {field.username}
-                {" · "}
-                {field._count.bookings} שריונים
-                {" · "}
-                {field.isActive ? "פעיל" : "מושבת"}
-                {" · "}
-                SMS {field.smsPlanEnabled ? "פעיל" : "כבוי"}
-              </p>
+            <div className="flex items-start gap-3">
+              {field.logoMimeType ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`/api/fields/${field.slug}/logo`}
+                  alt=""
+                  className="mt-0.5 h-10 w-auto max-w-24 object-contain"
+                />
+              ) : null}
+              <div>
+                <p className="font-semibold">
+                  {field.displayName}
+                  {field.logoMimeType || field.logoUrl ? (
+                    <span className="mr-2 text-xs font-normal text-[var(--lime)]">
+                      · יש לוגו
+                    </span>
+                  ) : null}
+                </p>
+                <p className="text-sm text-[rgba(244,248,238,0.62)]">
+                  <Link href={`/${field.slug}`} className="underline">
+                    /{field.slug}
+                  </Link>
+                  {" · "}
+                  {field.username}
+                  {" · "}
+                  {field._count.bookings} שריונים
+                  {" · "}
+                  {field.isActive ? "פעיל" : "מושבת"}
+                  {" · "}
+                  SMS {field.smsPlanEnabled ? "פעיל" : "כבוי"}
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
+              <label className="shop-chip cursor-pointer rounded-xl px-3 py-1.5 text-sm">
+                {field.logoMimeType || field.logoUrl ? "החלף לוגו" : "העלה לוגו"}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    e.target.value = "";
+                    void uploadLogo(field, file);
+                  }}
+                />
+              </label>
+              {field.logoMimeType || field.logoUrl ? (
+                <button
+                  type="button"
+                  className="shop-chip rounded-xl px-3 py-1.5 text-sm"
+                  onClick={() => removeLogo(field)}
+                >
+                  הסר לוגו
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="shop-chip rounded-xl px-3 py-1.5 text-sm"

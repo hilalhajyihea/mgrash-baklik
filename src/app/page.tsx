@@ -7,37 +7,49 @@ import {
 import { BrandMark } from "@/components/BrandGraphics";
 
 const features = [
-  "כתובת ייחודית לכל מגרש על אותו דומיין",
-  "לוח שעות ציבורי — הלקוח בוחר תאריך ושעה פנויה",
-  "שריון נסגר רק אחרי לחיצה על קישור ב-SMS",
-  "פאנל ניהול לשעות השכרה, ימים סגורים ושריונים",
-  "הוספת שריון ידני מאושר מיד, בלי SMS",
+  {
+    title: "כתובת למגרש",
+    text: "כל מגרש מקבל עמוד משלו על אותו דומיין — הלקוחות נכנסים ושומרים שעה.",
+  },
+  {
+    title: "לוח חי",
+    text: "הלקוח בוחר תאריך ושעה פנויה מהטלפון, בלי שיחה ובלי וואטסאפ.",
+  },
+  {
+    title: "אישור ב-SMS",
+    text: "השריון נסגר רק אחרי לחיצה על קישור בהודעה — בלי תפיסת שעות סתם.",
+  },
+  {
+    title: "ניהול למגרש",
+    text: "שעות השכרה, ימים סגורים, שריונים, והוספה ידנית שמאושרת מיד.",
+  },
 ];
 
 export default function HomePage() {
   return (
     <main className="shop-shell flex-1">
-      <div className="mx-auto flex min-h-[100svh] max-w-5xl flex-col px-4 py-6 sm:px-8">
-        <header className="flex items-center justify-between gap-4">
+      <div className="mx-auto flex min-h-[100svh] max-w-5xl flex-col px-4 py-5 sm:px-8">
+        <header className="glass-nav flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
           <BrandMark tone="light" />
           <Link
             href="/platform/login"
-            className="rounded-xl border border-white/25 bg-black/35 px-4 py-2 text-sm font-semibold backdrop-blur-sm"
+            className="rounded-xl border border-white/20 bg-black/25 px-4 py-2 text-sm font-semibold backdrop-blur-sm transition hover:bg-black/40"
           >
             כניסת מנהל
           </Link>
         </header>
 
         <section className="animate-fade-up mt-16 max-w-2xl sm:mt-24">
-          <p className="text-xs font-semibold tracking-[0.22em] text-[var(--lime)]">
-            שריון מגרש כדורגל
+          <p className="text-xs font-semibold tracking-[0.28em] text-[var(--lime)]">
+            לילה במגרש · שריון בלחיצה
           </p>
-          <h1 className="font-display mt-4 text-5xl leading-[1.05] text-[var(--cream)] sm:text-7xl">
+          <h1 className="font-display mt-4 text-5xl leading-[1.04] text-[var(--cream)] sm:text-7xl">
             מגרש בקליק
           </h1>
-          <p className="mt-5 max-w-lg text-lg text-[rgba(244,248,238,0.78)]">
-            הלקוחות שלכם שומרים שעה מהטלפון. השריון נסגר רק אחרי אישור ב-SMS —
-            בלי תפיסת שעות סתם.
+          <div className="flood-line mt-5" />
+          <p className="mt-5 max-w-lg text-lg leading-relaxed text-[rgba(244,248,238,0.82)]">
+            הלקוחות שומרים שעה מהטלפון. האצטדיון שלכם נשאר מסודר — השריון נסגר
+            רק אחרי אישור ב-SMS.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -48,7 +60,7 @@ export default function HomePage() {
             </Link>
             <a
               href={SITE_ADMIN_WHATSAPP}
-              className="rounded-xl border border-white/25 px-6 py-3 font-semibold"
+              className="rounded-xl border border-white/25 bg-black/25 px-6 py-3 font-semibold backdrop-blur-sm transition hover:bg-black/40"
             >
               דברו איתי בוואטסאפ
             </a>
@@ -58,10 +70,15 @@ export default function HomePage() {
         <ul className="mt-16 grid gap-3 sm:grid-cols-2">
           {features.map((item) => (
             <li
-              key={item}
-              className="surface-dark rounded-2xl px-4 py-4 text-sm leading-relaxed"
+              key={item.title}
+              className="surface-dark rounded-2xl px-5 py-5"
             >
-              {item}
+              <p className="text-sm font-semibold tracking-wide text-[var(--lime)]">
+                {item.title}
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-[rgba(244,248,238,0.78)]">
+                {item.text}
+              </p>
             </li>
           ))}
         </ul>

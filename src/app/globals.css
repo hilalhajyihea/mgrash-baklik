@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #e8f0e4;
-  --foreground: #0c1610;
-  --ink: #0c1610;
-  --muted: #5a6b5e;
-  --line: #c5d4c4;
-  --surface: rgba(247, 252, 246, 0.9);
+  --background: #07140c;
+  --foreground: #f4f8ee;
+  --ink: #07140c;
+  --muted: #9ab09a;
+  --line: rgba(244, 248, 238, 0.16);
+  --surface: rgba(8, 22, 14, 0.72);
   --lime: #c8e64e;
   --lime-deep: #8fb51a;
   --pitch: #1a5c32;
   --pitch-deep: #0d331c;
   --cream: #f4f8ee;
-  --charcoal: #0c1610;
-  --shadow: 0 22px 60px rgba(12, 22, 16, 0.12);
+  --charcoal: #07140c;
+  --flood: #ffe9a3;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
 }
 
 @theme inline {
@@ -24,21 +25,15 @@
 }
 
 body {
-  background: #07140c;
-  color: rgba(244, 248, 238, 0.92);
+  background: #040a07;
+  color: rgba(244, 248, 238, 0.94);
   font-family: var(--font-rubik), "Segoe UI", Tahoma, sans-serif;
   min-height: 100vh;
 }
 
+.font-display,
 .font-display {
   font-family: var(--font-frank), Georgia, serif;
-}
-
-.surface {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
 }
 
 .btn-primary {
@@ -50,7 +45,7 @@ body {
 .btn-primary:hover {
   filter: brightness(1.06);
   transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(200, 230, 78, 0.28);
+  box-shadow: 0 12px 28px rgba(200, 230, 78, 0.32);
 }
 
 .btn-primary:disabled {
@@ -60,20 +55,15 @@ body {
   box-shadow: none;
 }
 
-.pitch-lines {
-  background-image:
-    linear-gradient(90deg, rgba(244, 248, 238, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(244, 248, 238, 0.08) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
+.shop-shell,
 .shop-shell {
   position: relative;
   isolation: isolate;
   min-height: 100%;
-  background-color: #07140c;
+  background-color: #040a07;
 }
 
+.shop-shell::before,
 .shop-shell::before {
   content: "";
   position: absolute;
@@ -82,45 +72,52 @@ body {
   background:
     linear-gradient(
       180deg,
-      rgba(7, 20, 12, 0.35) 0%,
-      rgba(7, 20, 12, 0.72) 42%,
-      rgba(7, 20, 12, 0.94) 78%,
-      #07140c 100%
+      rgba(4, 10, 7, 0.28) 0%,
+      rgba(4, 10, 7, 0.42) 28%,
+      rgba(4, 10, 7, 0.78) 62%,
+      #040a07 100%
     ),
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(200, 230, 78, 0.16), transparent 55%),
-    repeating-linear-gradient(
-      90deg,
-      #14532d 0 40px,
-      #166534 40px 80px
-    );
+    radial-gradient(ellipse 70% 40% at 50% 18%, rgba(255, 233, 163, 0.18), transparent 58%),
+    url("/images/stadium-hero.jpg") center 28% / cover no-repeat;
   pointer-events: none;
 }
 
+.shop-shell::after,
 .shop-shell::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-  opacity: 0.14;
-  mix-blend-mode: soft-light;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 100%, rgba(0, 0, 0, 0.55), transparent 70%),
+    radial-gradient(circle at 18% 12%, rgba(255, 233, 163, 0.12), transparent 22%),
+    radial-gradient(circle at 82% 10%, rgba(255, 233, 163, 0.1), transparent 20%);
   pointer-events: none;
 }
 
+.shop-shell > *,
 .shop-shell > * {
   position: relative;
   z-index: 1;
 }
 
+.surface-dark,
 .surface-dark {
-  background: rgba(10, 28, 18, 0.92);
+  background: rgba(8, 22, 14, 0.78);
   border: 1px solid rgba(244, 248, 238, 0.14);
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(18px);
   color: rgba(244, 248, 238, 0.92);
 }
 
+.glass-nav,
+.glass-nav {
+  background: rgba(4, 10, 7, 0.45);
+  border: 1px solid rgba(244, 248, 238, 0.12);
+  backdrop-filter: blur(16px);
+}
+
+.shop-field,
 .shop-field {
   border: 1px solid rgba(244, 248, 238, 0.16);
   background: rgba(6, 16, 10, 0.55);
@@ -128,6 +125,7 @@ body {
   color-scheme: dark;
 }
 
+.shop-field:focus,
 .shop-field:focus {
   border-color: var(--lime);
   outline: none;
@@ -144,10 +142,18 @@ body {
   border-color: rgba(200, 230, 78, 0.7);
 }
 
+.shop-chip-active,
 .shop-chip-active {
   border-color: var(--lime);
   background: rgba(200, 230, 78, 0.18);
   color: var(--lime);
+}
+
+.flood-line {
+  height: 2px;
+  width: 4.5rem;
+  background: linear-gradient(90deg, var(--lime), rgba(255, 233, 163, 0.2));
+  box-shadow: 0 0 18px rgba(200, 230, 78, 0.55);
 }
 
 @keyframes fade-up {
@@ -161,11 +167,13 @@ body {
   }
 }
 
+.animate-fade-up,
 .animate-fade-up {
   animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
   .animate-fade-up {
     animation: none;
   }

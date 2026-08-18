@@ -21,6 +21,8 @@ export async function GET() {
       slotMinutes: true,
       holdMinutes: true,
       smsPlanEnabled: true,
+      logoUrl: true,
+      logoMimeType: true,
       createdAt: true,
       _count: { select: { bookings: true } },
     },

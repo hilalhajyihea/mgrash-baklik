@@ -8,9 +8,10 @@ import { combineDateAndTime, formatDateHe, toDateKey } from "@/lib/time";
 type Props = {
   slug: string;
   displayName: string;
+  logoUrl?: string | null;
 };
 
-export function BookingCalendar({ slug, displayName }: Props) {
+export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
   const dates = useMemo(() => {
     const list: { key: string; label: string }[] = [];
     const todayKey = toDateKey();
@@ -109,8 +110,8 @@ export function BookingCalendar({ slug, displayName }: Props) {
 
   return (
     <div className="shop-shell relative min-h-[100svh]">
-      <section className="relative isolate overflow-hidden px-4 py-6 sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
+      <section className="relative isolate overflow-hidden px-4 py-5 sm:px-6">
+        <div className="glass-nav mx-auto flex max-w-3xl items-center justify-between gap-4 rounded-2xl px-4 py-3">
           <BrandMark tone="light" />
           <Link
             href={`/${slug}/login`}
@@ -120,14 +121,25 @@ export function BookingCalendar({ slug, displayName }: Props) {
           </Link>
         </div>
 
-        <header className="animate-fade-up mx-auto max-w-3xl pb-10 pt-16 sm:pb-14 sm:pt-20">
-          <p className="text-xs font-semibold tracking-[0.22em] text-[rgba(244,248,238,0.78)]">
+        <header className="animate-fade-up mx-auto max-w-3xl pb-10 pt-16 sm:pb-14 sm:pt-24">
+          <p className="text-xs font-semibold tracking-[0.28em] text-[var(--lime)]">
             שריון מגרש
           </p>
-          <h1 className="font-display mt-3 max-w-xl text-4xl leading-[1.08] text-[var(--cream)] sm:text-6xl">
-            {displayName}
-          </h1>
-          <div className="mt-5 h-0.5 w-16 bg-[var(--lime)]" />
+          {logoUrl ? (
+            <div className="mt-5 flex w-full justify-start">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoUrl}
+                alt={displayName}
+                className="h-auto max-h-24 w-auto max-w-[min(100%,22rem)] object-contain object-right drop-shadow-[0_12px_28px_rgba(0,0,0,0.45)] sm:max-h-32"
+              />
+            </div>
+          ) : (
+            <h1 className="font-display mt-3 max-w-xl text-4xl leading-[1.08] text-[var(--cream)] sm:text-6xl">
+              {displayName}
+            </h1>
+          )}
+          <div className="flood-line mt-5" />
           <p className="mt-4 max-w-md text-base text-[rgba(244,248,238,0.82)] sm:text-lg">
             בחרו תאריך ושעה, הזינו שם וטלפון. השריון ייסגר רק אחרי לחיצה על קישור ב-SMS.
           </p>

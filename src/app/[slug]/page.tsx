@@ -29,13 +29,22 @@ export default async function FieldPublicPage({ params }: Props) {
       slug: true,
       displayName: true,
       isActive: true,
+      logoMimeType: true,
     },
   });
   if (!field || !field.isActive) notFound();
 
+  const logoUrl = field.logoMimeType
+    ? `/api/fields/${field.slug}/logo`
+    : null;
+
   return (
     <main className="flex-1">
-      <BookingCalendar slug={field.slug} displayName={field.displayName} />
+      <BookingCalendar
+        slug={field.slug}
+        displayName={field.displayName}
+        logoUrl={logoUrl}
+      />
     </main>
   );
 }
