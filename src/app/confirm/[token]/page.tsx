@@ -71,7 +71,7 @@ export default async function ConfirmPage({ params }: Props) {
           href="/"
           className="mt-8 inline-block rounded-xl border border-white/20 px-6 py-3 font-semibold"
         >
-          العودة إلى ملعب بكليك
+          العودة إلى ملعب بكبسة زر
         </Link>
       </div>
     </main>

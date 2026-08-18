@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const SITE_NAME = "ملعب بكليك";
+const SITE_NAME = "ملعب بكبسة زر";
 const HOME_DESCRIPTION =
   "احجز ملعب كرة قدم بضغطة — اختر الساعة، أكّد برسالة SMS، ويصبح الحجز لك.";
 

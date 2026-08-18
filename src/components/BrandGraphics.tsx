@@ -35,7 +35,7 @@ type BrandMarkProps = {
 export function BrandMark({
   className = "",
   tone = "dark",
-  label = "ملعب بكليك",
+  label = "ملعب بكبسة زر",
 }: BrandMarkProps) {
   const text =
     tone === "light" ? "text-[var(--cream)]" : "text-[var(--ink)]";

@@ -11,7 +11,7 @@ export default function NotFound() {
         href="/"
         className="btn-primary mt-8 rounded-xl px-6 py-3 font-semibold"
       >
-        العودة إلى ملعب بكليك
+        العودة إلى ملعب بكبسة زر
       </Link>
     </main>
   );

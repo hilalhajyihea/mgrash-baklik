@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const field = await prisma.field.findUnique({ where: { slug } });
   return {
     title: field
-      ? `ملعب بكليك · دخول · ${field.displayName}`
-      : "ملعب بكليك · دخول",
+      ? `ملعب بكبسة زر · دخول · ${field.displayName}`
+      : "ملعب بكبسة زر · دخول",
   };
 }
 

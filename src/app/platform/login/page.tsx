@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "ملعب بكليك · دخول مدير النظام",
+  title: "ملعب بكبسة زر · دخول مدير النظام",
 };
 
 export default async function PlatformLoginPage() {
@@ -20,7 +20,7 @@ export default async function PlatformLoginPage() {
       <LoginForm
         endpoint="/api/auth/platform/login"
         title="مدير النظام"
-        subtitle="إدارة الملاعب في منصة ملعب بكليك"
+        subtitle="إدارة الملاعب في منصة ملعب بكبسة زر"
         redirectTo="/platform"
       />
     </main>

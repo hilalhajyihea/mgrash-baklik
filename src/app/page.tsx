@@ -44,7 +44,7 @@ export default function HomePage() {
             ليلة في الملعب · حجز بضغطة
           </p>
           <h1 className="font-display mt-4 text-5xl leading-[1.04] text-[var(--cream)] sm:text-7xl">
-            ملعب بكليك
+            ملعب بكبسة زر
           </h1>
           <div className="flood-line mt-5" />
           <p className="mt-5 max-w-lg text-lg leading-relaxed text-[rgba(244,248,238,0.82)]">

@@ -6,7 +6,7 @@ import { requirePlatformSession } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "ملعب بكليك · إدارة النظام",
+  title: "ملعب بكبسة زر · إدارة النظام",
 };
 
 export default async function PlatformPage() {
