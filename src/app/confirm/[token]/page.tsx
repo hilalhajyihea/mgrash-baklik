@@ -28,42 +28,42 @@ export default async function ConfirmPage({ params }: Props) {
         {preview.kind === "hold" ? (
           <>
             <h1 className="font-display text-3xl text-[var(--cream)]">
-              אישור שריון
+              تأكيد الحجز
             </h1>
             <p className="mt-3 text-[rgba(244,248,238,0.78)]">
               {preview.fieldName}
               <br />
-              {formatDateHe(preview.startsAt)} בשעה {formatTime(preview.startsAt)}
+              {formatDateHe(preview.startsAt)} الساعة {formatTime(preview.startsAt)}
               <br />
-              על שם {preview.customerName}
+              باسم {preview.customerName}
             </p>
             <p className="mt-4 text-sm text-[rgba(244,248,238,0.62)]">
-              השעה תישמר רק אחרי שתלחצו על הכפתור.
+              تُحفظ الساعة فقط بعد الضغط على الزر.
             </p>
             <ConfirmHoldButton token={token} />
           </>
         ) : preview.kind === "confirmed" ? (
           <>
             <h1 className="font-display text-3xl text-[var(--cream)]">
-              השריון אושר
+              تم تأكيد الحجز
             </h1>
             <p className="mt-3 text-[rgba(244,248,238,0.78)]">
               {preview.fieldName}
               <br />
-              {formatDateHe(preview.startsAt)} בשעה {formatTime(preview.startsAt)}
+              {formatDateHe(preview.startsAt)} الساعة {formatTime(preview.startsAt)}
             </p>
           </>
         ) : (
           <>
             <h1 className="font-display text-3xl text-[var(--cream)]">
-              לא ניתן לאשר
+              تعذّر التأكيد
             </h1>
             <p className="mt-3 text-[rgba(244,248,238,0.78)]">
               {preview.kind === "expired"
-                ? "חלף הזמן לאישור. השעה שוחררה — אפשר לשריין מחדש."
+                ? "انتهى وقت التأكيد. أُفرجت الساعة — يمكن الحجز من جديد."
                 : preview.kind === "cancelled"
-                  ? "השריון בוטל."
-                  : "הקישור אינו תקין."}
+                  ? "أُلغي الحجز."
+                  : "الرابط غير صالح."}
             </p>
           </>
         )}
@@ -71,7 +71,7 @@ export default async function ConfirmPage({ params }: Props) {
           href="/"
           className="mt-8 inline-block rounded-xl border border-white/20 px-6 py-3 font-semibold"
         >
-          חזרה למגרש בקליק
+          العودة إلى ملعب بكليك
         </Link>
       </div>
     </main>

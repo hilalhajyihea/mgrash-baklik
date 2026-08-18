@@ -14,21 +14,21 @@ const schema = z.object({
     .transform((v) => (v ?? "").trim())
     .refine(
       (v) => v === "" || (v.length >= 9 && /^[\d+\-\s()]+$/.test(v)),
-      "טלפון לא תקין",
+      "رقم هاتف غير صالح",
     ),
 });
 
 export async function POST(request: Request) {
   const session = await requireFieldSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message || "נתונים לא תקינים" },
+      { error: parsed.error.issues[0]?.message || "بيانات غير صالحة" },
       { status: 400 },
     );
   }
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     return NextResponse.json(
-      { error: message || "השריון נכשל" },
+      { error: message || "فشل الحجز" },
       { status: 409 },
     );
   }

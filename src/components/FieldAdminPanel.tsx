@@ -105,7 +105,7 @@ export function FieldAdminPanel({
       setHours(next);
       setDayOffs(dData.dayOffs || []);
     } catch {
-      setError("שגיאה בטעינה");
+      setError("خطأ في التحميل");
     } finally {
       setLoading(false);
     }
@@ -149,10 +149,10 @@ export function FieldAdminPanel({
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "שמירת שעות נכשלה");
+      setError(data.error || "فشل حفظ الساعات");
       return;
     }
-    setMessage("שעות ההשכרה נשמרו");
+    setMessage("تم حفظ ساعات التأجير");
   }
 
   async function addDayOff(e: FormEvent) {
@@ -163,12 +163,12 @@ export function FieldAdminPanel({
       body: JSON.stringify({ date: offDate, note: offNote }),
     });
     if (!res.ok) {
-      setError("הוספת יום סגור נכשלה");
+      setError("فشل إضافة يوم إغلاق");
       return;
     }
     setOffDate("");
     setOffNote("");
-    setMessage("יום סגור נוסף");
+    setMessage("أُضيف يوم إغلاق");
     load();
   }
 
@@ -182,13 +182,13 @@ export function FieldAdminPanel({
   }
 
   async function cancelBooking(id: string) {
-    if (!confirm("לבטל את השריון?")) return;
+    if (!confirm("إلغاء الحجز؟")) return;
     await fetch("/api/field/bookings/cancel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    setMessage("השריון בוטל");
+    setMessage("أُلغي الحجز");
     load();
   }
 
@@ -207,10 +207,10 @@ export function FieldAdminPanel({
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "שריון נכשל");
+      setError(data.error || "فشل الحجز");
       return;
     }
-    setMessage("השריון נוסף ואושר");
+    setMessage("أُضيف الحجز وأُكّد");
     setBookName("");
     setBookPhone("");
     setBookTime("");
@@ -218,10 +218,10 @@ export function FieldAdminPanel({
   }
 
   const tabs = [
-    { id: "bookings" as const, label: "שריונים" },
-    { id: "book" as const, label: "הוספת שריון" },
-    { id: "hours" as const, label: "שעות השכרה" },
-    { id: "daysOff" as const, label: "ימים סגורים" },
+    { id: "bookings" as const, label: "حجوزات" },
+    { id: "book" as const, label: "إضافة حجز" },
+    { id: "hours" as const, label: "ساعات التأجير" },
+    { id: "daysOff" as const, label: "أيام الإغلاق" },
   ];
 
   return (
@@ -233,20 +233,20 @@ export function FieldAdminPanel({
             href={`/${slug}`}
             className="rounded-xl border border-white/20 px-4 py-2 text-sm"
           >
-            דף ציבורי
+            الصفحة العامة
           </Link>
           <button
             type="button"
             onClick={logout}
             className="rounded-xl border border-white/20 px-4 py-2 text-sm"
           >
-            יציאה
+            خروج
           </button>
         </div>
       </div>
 
       <h1 className="font-display text-3xl text-[var(--cream)]">{displayName}</h1>
-      <p className="mt-1 text-sm text-[rgba(244,248,238,0.62)]">ניהול מגרש</p>
+      <p className="mt-1 text-sm text-[rgba(244,248,238,0.62)]">إدارة الملعب</p>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {tabs.map((t) => (
@@ -270,12 +270,12 @@ export function FieldAdminPanel({
       ) : null}
       {message ? <p className="mt-4 text-sm text-[var(--lime)]">{message}</p> : null}
 
-      {loading ? <p className="mt-6">טוען…</p> : null}
+      {loading ? <p className="mt-6">جارٍ التحميل…</p> : null}
 
       {tab === "bookings" && !loading ? (
         <div className="mt-6 space-y-3">
           {bookings.length === 0 ? (
-            <p className="text-sm text-[rgba(244,248,238,0.62)]">אין שריונים קרובים.</p>
+            <p className="text-sm text-[rgba(244,248,238,0.62)]">لا حجوزات قريبة.</p>
           ) : (
             bookings.map((b) => (
               <div
@@ -287,8 +287,8 @@ export function FieldAdminPanel({
                     {formatDateHe(new Date(b.startsAt))} · {formatTime(new Date(b.startsAt))}
                   </p>
                   <p className="text-sm text-[rgba(244,248,238,0.62)]">
-                    {b.customerName} · {b.customerPhone || "בלי טלפון"} ·{" "}
-                    {b.status === "HOLD" ? "ממתין לאישור SMS" : "מאושר"}
+                    {b.customerName} · {b.customerPhone || "بدون هاتف"} ·{" "}
+                    {b.status === "HOLD" ? "بانتظار تأكيد SMS" : "مؤكَّد"}
                   </p>
                 </div>
                 <button
@@ -296,7 +296,7 @@ export function FieldAdminPanel({
                   className="shop-chip rounded-xl px-3 py-1.5 text-sm"
                   onClick={() => cancelBooking(b.id)}
                 >
-                  ביטול
+                  إلغاء
                 </button>
               </div>
             ))
@@ -307,7 +307,7 @@ export function FieldAdminPanel({
       {tab === "book" ? (
         <form onSubmit={adminBook} className="surface-dark mt-6 space-y-4 rounded-2xl p-5">
           <p className="text-sm text-[rgba(244,248,238,0.62)]">
-            שריון שנוסף מכאן מאושר מיד, בלי SMS.
+            الحجز المُضاف من هنا يُعتمد فورًا، بدون SMS.
           </p>
           <input
             type="date"
@@ -332,14 +332,14 @@ export function FieldAdminPanel({
           </div>
           <input
             className="shop-field w-full rounded-xl px-3 py-2.5"
-            placeholder="שם לקוח"
+            placeholder="اسم الزبون"
             value={bookName}
             onChange={(e) => setBookName(e.target.value)}
             required
           />
           <input
             className="shop-field w-full rounded-xl px-3 py-2.5"
-            placeholder="טלפון (אופציונלי)"
+            placeholder="هاتف (اختياري)"
             value={bookPhone}
             onChange={(e) => setBookPhone(e.target.value)}
           />
@@ -348,7 +348,7 @@ export function FieldAdminPanel({
             disabled={!bookTime}
             className="btn-primary w-full rounded-xl py-3 font-semibold"
           >
-            שמירה מאושרת
+            حفظ مؤكَّد
           </button>
         </form>
       ) : null}
@@ -403,12 +403,12 @@ export function FieldAdminPanel({
                     )
                   }
                 />{" "}
-                פתוח
+                مفتوح
               </label>
             </div>
           ))}
           <button type="submit" className="btn-primary w-full rounded-xl py-3 font-semibold">
-            שמירת שעות
+            حفظ الساعات
           </button>
         </form>
       ) : null}
@@ -425,12 +425,12 @@ export function FieldAdminPanel({
             />
             <input
               className="shop-field w-full rounded-xl px-3 py-2.5"
-              placeholder="הערה (אופציונלי)"
+              placeholder="ملاحظة (اختياري)"
               value={offNote}
               onChange={(e) => setOffNote(e.target.value)}
             />
             <button type="submit" className="btn-primary w-full rounded-xl py-3 font-semibold">
-              סגירת יום
+              إغلاق يوم
             </button>
           </form>
           {dayOffs.map((d) => (
@@ -449,7 +449,7 @@ export function FieldAdminPanel({
                 className="shop-chip rounded-xl px-3 py-1.5 text-sm"
                 onClick={() => removeDayOff(d.id)}
               >
-                הסרה
+                حذف
               </button>
             </div>
           ))}

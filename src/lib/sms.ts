@@ -83,13 +83,13 @@ export async function sendSms(
     return {
       ok: false,
       skipped: true,
-      error: "019 SMS לא מוגדר בשרת (חסר USERNAME/TOKEN/SOURCE)",
+      error: "خدمة 019 SMS غير مُعدّة على الخادم (USERNAME/TOKEN/SOURCE ناقص)",
     };
   }
 
   const to = normalizePhoneIlLocal(toRaw);
   if (!to) {
-    return { ok: false, error: "מספר טלפון לא תקין לשליחת SMS" };
+    return { ok: false, error: "رقم الهاتف غير صالح لإرسال SMS" };
   }
 
   const payload = {
@@ -127,7 +127,7 @@ export async function sendSms(
         ok: false,
         error:
           message ||
-          `שליחת SMS נכשלה (019 status ${status ?? res.status})`,
+          `فشل إرسال SMS (019 status ${status ?? res.status})`,
         to,
       };
     }
@@ -145,7 +145,7 @@ export async function sendSms(
     return { ok: true, sid, to };
   } catch (error) {
     console.error("[sms] send failed", error);
-    return { ok: false, error: "שגיאת רשת בשליחת SMS", to };
+    return { ok: false, error: "خطأ في الشبكة أثناء إرسال SMS", to };
   }
 }
 
@@ -177,10 +177,10 @@ export function buildHoldConfirmSms(input: {
   holdMinutes: number;
 }): string {
   return [
-    `שלום ${input.customerName},`,
-    `לאישור שריון ב${input.fieldName}`,
-    `${formatDateHe(input.startsAt)} בשעה ${formatTime(input.startsAt)}`,
-    `לחצו על הקישור תוך ${input.holdMinutes} דקות:`,
+    `مرحباً ${input.customerName},`,
+    `لتأكيد الحجز في ${input.fieldName}`,
+    `${formatDateHe(input.startsAt)} الساعة ${formatTime(input.startsAt)}`,
+    `اضغطوا على الرابط خلال ${input.holdMinutes} دقيقة:`,
     input.confirmUrl,
     BRAND,
   ].join("\n");
@@ -192,9 +192,9 @@ export function buildConfirmedSms(input: {
   startsAt: Date;
 }): string {
   return [
-    `שלום ${input.customerName},`,
-    `השריון אושר ב${input.fieldName}`,
-    `${formatDateHe(input.startsAt)} בשעה ${formatTime(input.startsAt)}`,
+    `مرحباً ${input.customerName},`,
+    `تم تأكيد الحجز في ${input.fieldName}`,
+    `${formatDateHe(input.startsAt)} الساعة ${formatTime(input.startsAt)}`,
     BRAND,
   ].join("\n");
 }

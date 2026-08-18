@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "מגרש בקליק · כניסת מנהל מערכת",
+  title: "ملعب بكليك · دخول مدير النظام",
 };
 
 export default async function PlatformLoginPage() {
@@ -19,8 +19,8 @@ export default async function PlatformLoginPage() {
     <main className="shop-shell flex flex-1 items-center justify-center px-4 py-12">
       <LoginForm
         endpoint="/api/auth/platform/login"
-        title="מנהל מערכת"
-        subtitle="ניהול מגרשים בפלטפורמת מגרש בקליק"
+        title="مدير النظام"
+        subtitle="إدارة الملاعب في منصة ملعب بكليك"
         redirectTo="/platform"
       />
     </main>

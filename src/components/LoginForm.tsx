@@ -30,14 +30,14 @@ export function LoginForm({ endpoint, title, subtitle, redirectTo }: Props) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "הכניסה נכשלה");
+        setError(data.error || "فشل تسجيل الدخول");
         return;
       }
       const dest = data.field?.slug != null ? `/${data.field.slug}/admin` : redirectTo;
       router.push(dest);
       router.refresh();
     } catch {
-      setError("שגיאת רשת");
+      setError("خطأ في الشبكة");
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ export function LoginForm({ endpoint, title, subtitle, redirectTo }: Props) {
       ) : null}
 
       <label className="mt-6 block text-sm font-medium text-[var(--cream)]">
-        שם משתמש
+        اسم المستخدم
         <input
           className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
           value={username}
@@ -67,7 +67,7 @@ export function LoginForm({ endpoint, title, subtitle, redirectTo }: Props) {
       </label>
 
       <label className="mt-4 block text-sm font-medium text-[var(--cream)]">
-        סיסמה
+        كلمة المرور
         <input
           type="password"
           className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
@@ -89,7 +89,7 @@ export function LoginForm({ endpoint, title, subtitle, redirectTo }: Props) {
         disabled={loading}
         className="btn-primary mt-6 w-full rounded-xl py-3 font-semibold"
       >
-        {loading ? "נכנסים…" : "כניסה"}
+        {loading ? "جارٍ الدخول…" : "دخول"}
       </button>
     </form>
   );

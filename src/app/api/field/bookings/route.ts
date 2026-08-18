@@ -7,7 +7,7 @@ import { startOfJerusalemDay, toDateKey } from "@/lib/time";
 export async function GET() {
   const session = await requireFieldSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   await expireHolds();

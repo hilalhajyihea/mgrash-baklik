@@ -8,7 +8,7 @@ export function ConfirmHoldButton({ token }: { token: string }) {
         type="submit"
         className="btn-primary w-full rounded-xl px-6 py-3 font-semibold"
       >
-        אישור שריון
+        تأكيد الحجز
       </button>
     </form>
   );

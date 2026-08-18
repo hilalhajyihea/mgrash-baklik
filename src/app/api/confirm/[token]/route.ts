@@ -9,7 +9,7 @@ export async function POST(
   const { token: raw } = await context.params;
   const token = sanitizeToken(raw);
   if (!token) {
-    return NextResponse.json({ error: "הקישור אינו תקין" }, { status: 400 });
+    return NextResponse.json({ error: "الرابط غير صالح" }, { status: 400 });
   }
 
   const result = await confirmHold(token);

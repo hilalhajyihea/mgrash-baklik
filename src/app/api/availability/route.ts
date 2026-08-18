@@ -16,20 +16,20 @@ export async function GET(request: Request) {
       date: searchParams.get("date"),
     });
     if (!parsed.success) {
-      return NextResponse.json({ error: "פרמטרים לא תקינים" }, { status: 400 });
+      return NextResponse.json({ error: "معاملات غير صالحة" }, { status: 400 });
     }
 
     const field = await prisma.field.findUnique({
       where: { slug: parsed.data.slug },
     });
     if (!field || !field.isActive) {
-      return NextResponse.json({ error: "המגרש לא נמצא" }, { status: 404 });
+      return NextResponse.json({ error: "الملعب غير موجود" }, { status: 404 });
     }
 
     const slots = await getAvailableSlots(field.id, parsed.data.date);
     return NextResponse.json({ slots, slotMinutes: field.slotMinutes });
   } catch (error) {
     console.error("availability error", error);
-    return NextResponse.json({ error: "שגיאת שרת" }, { status: 500 });
+    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }

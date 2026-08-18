@@ -20,10 +20,10 @@ async function main() {
 
   const field = await prisma.field.upsert({
     where: { slug: "ramat-gan" },
-    update: { passwordHash },
+    update: { passwordHash, displayName: "ملعب رمات جان" },
     create: {
       slug: "ramat-gan",
-      displayName: "מגרש רמת גן",
+      displayName: "ملعب رمات جان",
       username: "ramatgan",
       passwordHash,
       slotMinutes: 60,

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
-const SITE_NAME = "מגרש בקליק";
-const HOME_DESCRIPTION = "שריון מגרש כדורגל בלחיצה — בחרו שעה, אשרו ב-SMS, וזה שלכם.";
+const SITE_NAME = "ملعب بكليك";
+const HOME_DESCRIPTION =
+  "احجز ملعب كرة قدم بضغطة — اختر الساعة، أكّد برسالة SMS، ويصبح الحجز لك.";
 
 function normalizeSiteUrl(raw: string) {
   let url = raw.trim().replace(/\/$/, "");
@@ -26,7 +27,7 @@ export function getSiteUrl() {
 }
 
 export function homeMetadata(): Metadata {
-  const title = `${SITE_NAME} · שריון מגרש כדורגל`;
+  const title = `${SITE_NAME} · حجز ملعب كرة قدم`;
   const url = getSiteUrl();
 
   return {
@@ -38,7 +39,7 @@ export function homeMetadata(): Metadata {
     metadataBase: new URL(url),
     openGraph: {
       type: "website",
-      locale: "he_IL",
+      locale: "ar_IL",
       siteName: SITE_NAME,
       title,
       description: HOME_DESCRIPTION,
@@ -49,7 +50,7 @@ export function homeMetadata(): Metadata {
 
 export function fieldShareMetadata(displayName: string, slug: string): Metadata {
   const title = `${SITE_NAME} · ${displayName}`;
-  const description = `שריון שעה ב${displayName} — דרך ${SITE_NAME}`;
+  const description = `احجز ساعة في ${displayName} — عبر ${SITE_NAME}`;
   const url = `${getSiteUrl()}/${slug}`;
 
   return {
@@ -57,7 +58,7 @@ export function fieldShareMetadata(displayName: string, slug: string): Metadata 
     description,
     openGraph: {
       type: "website",
-      locale: "he_IL",
+      locale: "ar_IL",
       siteName: SITE_NAME,
       title,
       description,

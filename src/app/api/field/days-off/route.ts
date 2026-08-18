@@ -7,7 +7,7 @@ import { dateKeyToDbDate, toDateKey } from "@/lib/time";
 export async function GET() {
   const session = await requireFieldSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const from = dateKeyToDbDate(toDateKey());
@@ -28,13 +28,13 @@ const createSchema = z.object({
 export async function POST(request: Request) {
   const session = await requireFieldSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "תאריך לא תקין" }, { status: 400 });
+    return NextResponse.json({ error: "تاريخ غير صالح" }, { status: 400 });
   }
 
   const date = dateKeyToDbDate(parsed.data.date);
@@ -60,13 +60,13 @@ const deleteSchema = z.object({
 export async function DELETE(request: Request) {
   const session = await requireFieldSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = deleteSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "חסר מזהה" }, { status: 400 });
+    return NextResponse.json({ error: "المعرّف ناقص" }, { status: 400 });
   }
 
   await prisma.dayOff.deleteMany({

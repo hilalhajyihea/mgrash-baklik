@@ -8,20 +8,20 @@ import { BrandMark } from "@/components/BrandGraphics";
 
 const features = [
   {
-    title: "כתובת למגרש",
-    text: "כל מגרש מקבל עמוד משלו על אותו דומיין — הלקוחות נכנסים ושומרים שעה.",
+    title: "رابط خاص للملعب",
+    text: "كل ملعب يحصل على صفحة خاصة على نفس النطاق — الزبائن يدخلون ويحجزون ساعة.",
   },
   {
-    title: "לוח חי",
-    text: "הלקוח בוחר תאריך ושעה פנויה מהטלפון, בלי שיחה ובלי וואטסאפ.",
+    title: "جدول حي",
+    text: "الزبون يختار التاريخ والساعة المتاحة من الهاتف، بدون اتصال وبدون واتساب.",
   },
   {
-    title: "אישור ב-SMS",
-    text: "השריון נסגר רק אחרי לחיצה על קישור בהודעה — בלי תפיסת שעות סתם.",
+    title: "تأكيد برسالة SMS",
+    text: "الحجز يُغلق فقط بعد الضغط على الرابط في الرسالة — بدون حجز ساعات سدى.",
   },
   {
-    title: "ניהול למגרש",
-    text: "שעות השכרה, ימים סגורים, שריונים, והוספה ידנית שמאושרת מיד.",
+    title: "إدارة للملعب",
+    text: "ساعات التأجير، أيام الإغلاق، الحجوزات، وإضافة يدوية تُعتمد فورًا.",
   },
 ];
 
@@ -35,34 +35,34 @@ export default function HomePage() {
             href="/platform/login"
             className="rounded-xl border border-white/20 bg-black/25 px-4 py-2 text-sm font-semibold backdrop-blur-sm transition hover:bg-black/40"
           >
-            כניסת מנהל
+            دخول الإدارة
           </Link>
         </header>
 
         <section className="animate-fade-up mt-16 max-w-2xl sm:mt-24">
           <p className="text-xs font-semibold tracking-[0.28em] text-[var(--lime)]">
-            לילה במגרש · שריון בלחיצה
+            ليلة في الملعب · حجز بضغطة
           </p>
           <h1 className="font-display mt-4 text-5xl leading-[1.04] text-[var(--cream)] sm:text-7xl">
-            מגרש בקליק
+            ملعب بكليك
           </h1>
           <div className="flood-line mt-5" />
           <p className="mt-5 max-w-lg text-lg leading-relaxed text-[rgba(244,248,238,0.82)]">
-            הלקוחות שומרים שעה מהטלפון. האצטדיון שלכם נשאר מסודר — השריון נסגר
-            רק אחרי אישור ב-SMS.
+            الزبائن يحجزون ساعة من الهاتف. الملعب يبقى مرتّبًا — والحجز يُغلق
+            فقط بعد التأكيد برسالة SMS.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/ramat-gan"
               className="btn-primary rounded-xl px-6 py-3 font-semibold"
             >
-              לצפייה במגרש דמו
+              مشاهدة ملعب تجريبي
             </Link>
             <a
               href={SITE_ADMIN_WHATSAPP}
               className="rounded-xl border border-white/25 bg-black/25 px-6 py-3 font-semibold backdrop-blur-sm transition hover:bg-black/40"
             >
-              דברו איתי בוואטסאפ
+              تواصلوا معي عبر واتساب
             </a>
           </div>
         </section>

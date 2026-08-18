@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const field = await prisma.field.findUnique({ where: { slug } });
   return {
     title: field
-      ? `מגרש בקליק · כניסה · ${field.displayName}`
-      : "מגרש בקליק · כניסה",
+      ? `ملعب بكليك · دخول · ${field.displayName}`
+      : "ملعب بكليك · دخول",
   };
 }
 
@@ -32,8 +32,8 @@ export default async function FieldLoginPage({ params }: Props) {
     <main className="shop-shell flex flex-1 items-center justify-center px-4 py-12">
       <LoginForm
         endpoint="/api/auth/field/login"
-        title="כניסת בעל מגרש"
-        subtitle={`ניהול ${field.displayName}`}
+        title="دخول صاحب الملعب"
+        subtitle={`إدارة ${field.displayName}`}
         redirectTo={`/${slug}/admin`}
       />
     </main>

@@ -8,7 +8,7 @@ import { logoApiUrl, readLogoUpload } from "@/lib/fieldLogo";
 export async function POST(request: Request) {
   const session = await requirePlatformSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const form = await request.formData();
@@ -16,10 +16,10 @@ export async function POST(request: Request) {
   const file = form.get("file");
 
   if (!fieldId) {
-    return NextResponse.json({ error: "מזהה מגרש חסר" }, { status: 400 });
+    return NextResponse.json({ error: "معرّف الملعب ناقص" }, { status: 400 });
   }
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "לא נבחר קובץ לוגו" }, { status: 400 });
+    return NextResponse.json({ error: "لم يُختر ملف شعار" }, { status: 400 });
   }
 
   const field = await prisma.field.findUnique({
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     select: { id: true, slug: true, displayName: true },
   });
   if (!field) {
-    return NextResponse.json({ error: "מגרש לא נמצא" }, { status: 404 });
+    return NextResponse.json({ error: "الملعب غير موجود" }, { status: 404 });
   }
 
   try {
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ field: updated });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "העלאת הלוגו נכשלה";
+      error instanceof Error ? error.message : "فشل رفع الشعار";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -53,13 +53,13 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const session = await requirePlatformSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));
   const fieldId = String(body.id || "");
   if (!fieldId) {
-    return NextResponse.json({ error: "מזהה מגרש חסר" }, { status: 400 });
+    return NextResponse.json({ error: "معرّف الملعب ناقص" }, { status: 400 });
   }
 
   const field = await prisma.field.findUnique({
@@ -67,7 +67,7 @@ export async function DELETE(request: Request) {
     select: { id: true, displayName: true, slug: true },
   });
   if (!field) {
-    return NextResponse.json({ error: "מגרש לא נמצא" }, { status: 404 });
+    return NextResponse.json({ error: "الملعب غير موجود" }, { status: 404 });
   }
 
   const updated = await prisma.field.update({

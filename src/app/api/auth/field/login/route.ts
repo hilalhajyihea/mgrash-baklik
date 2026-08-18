@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
+      return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
     }
 
     const field = await authenticateField(
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     );
     if (!field) {
       return NextResponse.json(
-        { error: "שם משתמש או סיסמה שגויים" },
+        { error: "اسم المستخدم أو كلمة المرور غير صحيحة" },
         { status: 401 },
       );
     }
@@ -45,6 +45,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("field login error", error);
-    return NextResponse.json({ error: "שגיאת שרת" }, { status: 500 });
+    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }

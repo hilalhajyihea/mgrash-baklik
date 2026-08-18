@@ -104,12 +104,12 @@ export async function createPublicHold(input: {
     where: { id: input.fieldId },
   });
   if (!field || !field.isActive) {
-    throw new Error("המגרש לא פעיל");
+    throw new Error("الملعب غير فعّال");
   }
 
   const slots = await getAvailableSlots(input.fieldId, input.dateKey);
   if (!slots.includes(input.time)) {
-    throw new Error("השעה אינה פנויה");
+    throw new Error("الساعة غير متاحة");
   }
 
   const startsAt = combineDateAndTime(input.dateKey, input.time);
@@ -126,7 +126,7 @@ export async function createPublicHold(input: {
       },
     });
     if (overlapping) {
-      throw new Error("השעה נתפסה בינתיים");
+      throw new Error("أُخذت الساعة في هذه الأثناء");
     }
 
     return tx.booking.create({
@@ -156,12 +156,12 @@ export async function createAdminBooking(input: {
     where: { id: input.fieldId },
   });
   if (!field || !field.isActive) {
-    throw new Error("המגרש לא פעיל");
+    throw new Error("الملعب غير فعّال");
   }
 
   const slots = await getAvailableSlots(input.fieldId, input.dateKey);
   if (!slots.includes(input.time)) {
-    throw new Error("השעה אינה פנויה");
+    throw new Error("الساعة غير متاحة");
   }
 
   const startsAt = combineDateAndTime(input.dateKey, input.time);
@@ -177,7 +177,7 @@ export async function createAdminBooking(input: {
       },
     });
     if (overlapping) {
-      throw new Error("השעה נתפסה בינתיים");
+      throw new Error("أُخذت الساعة في هذه الأثناء");
     }
 
     return tx.booking.create({

@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const field = await prisma.field.findUnique({ where: { slug } });
   if (!field || !field.isActive) {
-    return { title: "מגרש בקליק" };
+    return { title: "ملعب بكليك" };
   }
   return fieldShareMetadata(field.displayName, field.slug);
 }

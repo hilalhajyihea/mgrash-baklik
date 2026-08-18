@@ -41,7 +41,7 @@ export function PlatformAdminPanel() {
       const data = await res.json();
       setFields(data.fields || []);
     } catch {
-      setError("שגיאה בטעינה");
+      setError("خطأ في التحميل");
     } finally {
       setLoading(false);
     }
@@ -67,10 +67,10 @@ export function PlatformAdminPanel() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "יצירה נכשלה");
+      setError(data.error || "فشل الإنشاء");
       return;
     }
-    setMessage(`המגרש נוצר — כתובת: /${data.field.slug}`);
+    setMessage(`تم إنشاء الملعب — العنوان: /${data.field.slug}`);
     setSlug("");
     setDisplayName("");
     setUsername("");
@@ -85,7 +85,7 @@ export function PlatformAdminPanel() {
       body: JSON.stringify({ id, ...body }),
     });
     if (!res.ok) {
-      setError("עדכון נכשל");
+      setError("فشل التحديث");
       return;
     }
     setMessage(okMsg);
@@ -104,16 +104,16 @@ export function PlatformAdminPanel() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "העלאת לוגו נכשלה");
+      setError(data.error || "فشل رفع الشعار");
       return;
     }
-    setMessage(`לוגו עודכן ל־${field.displayName}`);
+    setMessage(`تم تحديث شعار ${field.displayName}`);
     load();
   }
 
   async function removeLogo(field: FieldRow) {
     if (!field.logoMimeType && !field.logoUrl) return;
-    if (!confirm(`להסיר את הלוגו של ${field.displayName}? השם יוצג שוב באתר.`)) {
+    if (!confirm(`حذف شعار ${field.displayName}؟ سيظهر الاسم مجددًا في الموقع.`)) {
       return;
     }
     setError("");
@@ -124,20 +124,20 @@ export function PlatformAdminPanel() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "הסרת לוגו נכשלה");
+      setError(data.error || "فشل حذف الشعار");
       return;
     }
-    setMessage(`הלוגו הוסר — באתר יוצג שוב השם: ${field.displayName}`);
+    setMessage(`حُذف الشعار — سيظهر الاسم مجددًا: ${field.displayName}`);
     load();
   }
 
   async function resetPassword(field: FieldRow) {
-    const next = prompt(`סיסמה חדשה עבור ${field.displayName}`);
+    const next = prompt(`كلمة مرور جديدة لـ ${field.displayName}`);
     if (!next || next.length < 6) {
-      if (next != null) setError("סיסמה חייבת לפחות 6 תווים");
+      if (next != null) setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
       return;
     }
-    await patchField(field.id, { password: next }, "הסיסמה עודכנה");
+    await patchField(field.id, { password: next }, "تم تحديث كلمة المرور");
   }
 
   return (
@@ -149,37 +149,37 @@ export function PlatformAdminPanel() {
           onClick={logout}
           className="rounded-xl border border-white/20 px-4 py-2 text-sm"
         >
-          יציאה
+          خروج
         </button>
       </div>
 
-      <h1 className="font-display text-3xl text-[var(--cream)]">ניהול מערכת</h1>
+      <h1 className="font-display text-3xl text-[var(--cream)]">إدارة النظام</h1>
       <p className="mt-2 text-sm text-[rgba(244,248,238,0.62)]">
-        הוסיפו בעלי מגרשים. כל מגרש מקבל כתובת על אותו דומיין.
+        أضيفوا أصحاب الملاعب. كل ملعب يحصل على عنوان على النطاق نفسه.
       </p>
 
       <form
         onSubmit={createField}
         className="surface-dark mt-8 grid gap-3 rounded-2xl p-5 sm:grid-cols-2"
       >
-        <h2 className="font-semibold sm:col-span-2">מגרש חדש</h2>
+        <h2 className="font-semibold sm:col-span-2">ملعب جديد</h2>
         <input
           className="shop-field rounded-xl px-3 py-2.5"
-          placeholder="כתובת (ramat-gan)"
+          placeholder="العنوان (ramat-gan)"
           value={slug}
           onChange={(e) => setSlug(e.target.value.toLowerCase())}
           required
         />
         <input
           className="shop-field rounded-xl px-3 py-2.5"
-          placeholder="שם תצוגה"
+          placeholder="اسم العرض"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           required
         />
         <input
           className="shop-field rounded-xl px-3 py-2.5"
-          placeholder="שם משתמש לכניסה"
+          placeholder="اسم المستخدم للدخول"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
@@ -187,14 +187,14 @@ export function PlatformAdminPanel() {
         <input
           type="password"
           className="shop-field rounded-xl px-3 py-2.5"
-          placeholder="סיסמה"
+          placeholder="كلمة المرور"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
         />
         <button type="submit" className="btn-primary rounded-xl py-2.5 font-semibold sm:col-span-2">
-          הוספת מגרש
+          إضافة ملعب
         </button>
       </form>
 
@@ -208,7 +208,7 @@ export function PlatformAdminPanel() {
       ) : null}
 
       <div className="mt-8 space-y-3">
-        {loading ? <p>טוען…</p> : null}
+        {loading ? <p>جارٍ التحميل…</p> : null}
         {fields.map((field) => (
           <div
             key={field.id}
@@ -228,7 +228,7 @@ export function PlatformAdminPanel() {
                   {field.displayName}
                   {field.logoMimeType || field.logoUrl ? (
                     <span className="mr-2 text-xs font-normal text-[var(--lime)]">
-                      · יש לוגו
+                      · يوجد شعار
                     </span>
                   ) : null}
                 </p>
@@ -239,17 +239,17 @@ export function PlatformAdminPanel() {
                   {" · "}
                   {field.username}
                   {" · "}
-                  {field._count.bookings} שריונים
+                  {field._count.bookings} حجوزات
                   {" · "}
-                  {field.isActive ? "פעיל" : "מושבת"}
+                  {field.isActive ? "فعّال" : "متوقف"}
                   {" · "}
-                  SMS {field.smsPlanEnabled ? "פעיל" : "כבוי"}
+                  SMS {field.smsPlanEnabled ? "فعّال" : "متوقف"}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <label className="shop-chip cursor-pointer rounded-xl px-3 py-1.5 text-sm">
-                {field.logoMimeType || field.logoUrl ? "החלף לוגו" : "העלה לוגו"}
+                {field.logoMimeType || field.logoUrl ? "استبدال الشعار" : "رفع شعار"}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp,image/svg+xml"
@@ -267,7 +267,7 @@ export function PlatformAdminPanel() {
                   className="shop-chip rounded-xl px-3 py-1.5 text-sm"
                   onClick={() => removeLogo(field)}
                 >
-                  הסר לוגו
+                  حذف الشعار
                 </button>
               ) : null}
               <button
@@ -277,11 +277,11 @@ export function PlatformAdminPanel() {
                   patchField(
                     field.id,
                     { isActive: !field.isActive },
-                    field.isActive ? "המגרש הושבת" : "המגרש הופעל",
+                    field.isActive ? "أُوقف الملعب" : "فُعّل الملعب",
                   )
                 }
               >
-                {field.isActive ? "השבתה" : "הפעלה"}
+                {field.isActive ? "إيقاف" : "تفعيل"}
               </button>
               <button
                 type="button"
@@ -290,7 +290,7 @@ export function PlatformAdminPanel() {
                   patchField(
                     field.id,
                     { smsPlanEnabled: !field.smsPlanEnabled },
-                    field.smsPlanEnabled ? "SMS הושבת" : "SMS הופעל",
+                    field.smsPlanEnabled ? "SMS أُوقف" : "SMS فُعّل",
                   )
                 }
               >
@@ -301,7 +301,7 @@ export function PlatformAdminPanel() {
                 className="shop-chip rounded-xl px-3 py-1.5 text-sm"
                 onClick={() => resetPassword(field)}
               >
-                סיסמה
+                كلمة المرور
               </button>
             </div>
           </div>

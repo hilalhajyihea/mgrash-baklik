@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, expired });
   } catch (error) {
     console.error("cron expire-holds error", error);
-    return NextResponse.json({ error: "שגיאת שרת" }, { status: 500 });
+    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }
 

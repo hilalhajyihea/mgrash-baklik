@@ -7,8 +7,8 @@ import {
 } from "@/lib/auth";
 
 const schema = z.object({
-  username: z.string().min(1, "נא להזין שם משתמש"),
-  password: z.string().min(1, "נא להזין סיסמה"),
+  username: z.string().min(1, "يرجى إدخال اسم المستخدم"),
+  password: z.string().min(1, "يرجى إدخال كلمة المرور"),
 });
 
 export async function POST(request: Request) {
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message || "נתונים לא תקינים" },
+        { error: parsed.error.issues[0]?.message || "بيانات غير صالحة" },
         { status: 400 },
       );
     }
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     );
     if (!ok) {
       return NextResponse.json(
-        { error: "שם משתמש או סיסמה שגויים" },
+        { error: "اسم المستخدم أو كلمة المرور غير صحيحة" },
         { status: 401 },
       );
     }
@@ -42,6 +42,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("platform login error", error);
-    return NextResponse.json({ error: "שגיאת שרת" }, { status: 500 });
+    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }

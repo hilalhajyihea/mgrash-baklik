@@ -10,20 +10,20 @@ const schema = z.object({
 export async function POST(request: Request) {
   const session = await requireFieldSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "חסר מזהה שריון" }, { status: 400 });
+    return NextResponse.json({ error: "معرّف الحجز ناقص" }, { status: 400 });
   }
 
   const booking = await prisma.booking.findFirst({
     where: { id: parsed.data.id, fieldId: session.fieldId },
   });
   if (!booking) {
-    return NextResponse.json({ error: "השריון לא נמצא" }, { status: 404 });
+    return NextResponse.json({ error: "الحجز غير موجود" }, { status: 404 });
   }
 
   await prisma.booking.update({

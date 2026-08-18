@@ -17,7 +17,7 @@ const schema = z.object({
 export async function GET() {
   const session = await requireFieldSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const hours = await prisma.workingHours.findMany({
@@ -31,19 +31,19 @@ export async function GET() {
 export async function PUT(request: Request) {
   const session = await requireFieldSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
+    return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
   }
 
   for (const h of parsed.data.hours) {
     if (h.enabled && h.startTime >= h.endTime) {
       return NextResponse.json(
-        { error: "שעת הסיום חייבת להיות אחרי שעת ההתחלה" },
+        { error: "ساعة الانتهاء يجب أن تكون بعد ساعة البداية" },
         { status: 400 },
       );
     }

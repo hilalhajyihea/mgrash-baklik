@@ -41,7 +41,7 @@ export async function createField(input: {
   slotMinutes?: number;
 }) {
   if (!isValidSlug(input.slug)) {
-    throw new Error("כתובת לא תקינה (רק אותיות באנגלית קטנות, מספרים ומקף)");
+    throw new Error("عنوان غير صالح (أحرف إنجليزية صغيرة وأرقام وشرطة فقط)");
   }
 
   const passwordHash = await hash(input.password, 12);

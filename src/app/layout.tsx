@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Frank_Ruhl_Libre, Rubik } from "next/font/google";
+import { Cairo, Rubik } from "next/font/google";
 import { homeMetadata } from "@/lib/seo";
 import "./globals.css";
 
 const rubik = Rubik({
   variable: "--font-rubik",
-  subsets: ["hebrew", "latin"],
+  subsets: ["arabic", "latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const frank = Frank_Ruhl_Libre({
+const cairo = Cairo({
   variable: "--font-frank",
-  subsets: ["hebrew", "latin"],
+  subsets: ["arabic", "latin"],
   weight: ["500", "700"],
 });
 
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl" className={`${rubik.variable} ${frank.variable} h-full`}>
+    <html lang="ar" dir="rtl" className={`${rubik.variable} ${cairo.variable} h-full`}>
       <body className="flex min-h-full flex-col antialiased">{children}</body>
     </html>
   );

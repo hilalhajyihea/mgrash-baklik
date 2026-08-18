@@ -2,7 +2,7 @@
 
 export const TIMEZONE = "Asia/Jerusalem";
 
-const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
 export function dayName(dayOfWeek: number) {
   return DAY_NAMES[dayOfWeek] ?? String(dayOfWeek);
@@ -94,7 +94,7 @@ export function formatTime(date: Date): string {
 }
 
 export function formatDateHe(date: Date): string {
-  return date.toLocaleDateString("he-IL", {
+  return date.toLocaleDateString("ar-IL", {
     timeZone: TIMEZONE,
     weekday: "long",
     day: "numeric",

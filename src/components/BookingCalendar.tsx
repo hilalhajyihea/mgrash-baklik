@@ -78,17 +78,17 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "השריון נכשל");
+        setError(data.error || "فشل الحجز");
         return;
       }
 
       if (data.sms?.ok && !data.sms?.skipped) {
         setSuccess(
-          `נשלח אליכם SMS. לחצו על הקישור תוך 15 דקות כדי לאשר את ${formatDateHe(combineDateAndTime(date, "12:00"))} בשעה ${time}.`,
+          `أُرسلت إليكم رسالة SMS. اضغطوا على الرابط خلال 15 دقيقة لتأكيد ${formatDateHe(combineDateAndTime(date, "12:00"))} الساعة ${time}.`,
         );
       } else {
         setSuccess(
-          `השעה נשמרה זמנית ל-${formatDateHe(combineDateAndTime(date, "12:00"))} בשעה ${time}. אשרו בקישור למטה.`,
+          `حُفظت الساعة مؤقتًا لـ ${formatDateHe(combineDateAndTime(date, "12:00"))} الساعة ${time}. أكّدوا عبر الرابط أدناه.`,
         );
         if (data.confirmUrl) setConfirmUrl(data.confirmUrl);
         if (data.sms?.error && !data.sms?.skipped) setError(data.sms.error);
@@ -102,7 +102,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
       const refreshed = await refresh.json();
       setSlots(refreshed.slots || []);
     } catch {
-      setError("שגיאת רשת");
+      setError("خطأ في الشبكة");
     } finally {
       setSubmitting(false);
     }
@@ -117,13 +117,13 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
             href={`/${slug}/login`}
             className="shrink-0 rounded-xl border border-white/25 bg-black/35 px-4 py-2 text-sm font-semibold text-[var(--cream)] backdrop-blur-sm transition hover:bg-black/50"
           >
-            ניהול
+            إدارة
           </Link>
         </div>
 
         <header className="animate-fade-up mx-auto max-w-3xl pb-10 pt-16 sm:pb-14 sm:pt-24">
           <p className="text-xs font-semibold tracking-[0.28em] text-[var(--lime)]">
-            שריון מגרש
+            حجز ملعب
           </p>
           {logoUrl ? (
             <div className="mt-5 flex w-full justify-start">
@@ -141,7 +141,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
           )}
           <div className="flood-line mt-5" />
           <p className="mt-4 max-w-md text-base text-[rgba(244,248,238,0.82)] sm:text-lg">
-            בחרו תאריך ושעה, הזינו שם וטלפון. השריון ייסגר רק אחרי לחיצה על קישור ב-SMS.
+            اختاروا التاريخ والساعة، وأدخلوا الاسم والهاتف. يُغلق الحجز فقط بعد الضغط على رابط SMS.
           </p>
         </header>
       </section>
@@ -152,7 +152,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
             onSubmit={onSubmit}
             className="surface-dark animate-fade-up rounded-2xl p-5 sm:p-7"
           >
-            <h2 className="text-lg font-semibold text-[var(--cream)]">תאריך</h2>
+            <h2 className="text-lg font-semibold text-[var(--cream)]">التاريخ</h2>
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {dates.map((d) => (
                 <button
@@ -168,12 +168,12 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
               ))}
             </div>
 
-            <h2 className="mt-6 text-lg font-semibold text-[var(--cream)]">שעה</h2>
+            <h2 className="mt-6 text-lg font-semibold text-[var(--cream)]">الساعة</h2>
             {loadingSlots ? (
-              <p className="mt-3 text-sm text-[rgba(244,248,238,0.62)]">טוען שעות…</p>
+              <p className="mt-3 text-sm text-[rgba(244,248,238,0.62)]">جارٍ تحميل الساعات…</p>
             ) : slots.length === 0 ? (
               <p className="mt-3 text-sm text-[rgba(244,248,238,0.62)]">
-                אין שעות פנויות ביום זה.
+                لا توجد ساعات متاحة في هذا اليوم.
               </p>
             ) : (
               <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -193,7 +193,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
             )}
 
             <label className="mt-6 block text-sm font-medium text-[var(--cream)]">
-              שם
+              الاسم
               <input
                 className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
                 value={name}
@@ -203,7 +203,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
               />
             </label>
             <label className="mt-4 block text-sm font-medium text-[var(--cream)]">
-              טלפון
+              الهاتف
               <input
                 className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
                 value={phone}
@@ -226,7 +226,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
             {confirmUrl ? (
               <p className="mt-3 text-sm">
                 <Link href={confirmUrl} className="underline text-[var(--lime)]">
-                  לחצו כאן לאישור השריון
+                  اضغطوا هنا لتأكيد الحجز
                 </Link>
               </p>
             ) : null}
@@ -236,7 +236,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
               disabled={submitting || !time}
               className="btn-primary mt-6 w-full rounded-xl py-3 font-semibold"
             >
-              {submitting ? "שומרים…" : "שמירת שעה"}
+              {submitting ? "جارٍ الحفظ…" : "حفظ الساعة"}
             </button>
           </form>
         </div>

@@ -74,13 +74,13 @@ export async function readLogoUpload(file: File): Promise<{
   mimeType: string;
 }> {
   if (file.size <= 0 || file.size > MAX_BYTES) {
-    throw new Error("גודל הקובץ חייב להיות עד 2MB");
+    throw new Error("يجب ألا يتجاوز حجم الملف 2MB");
   }
 
   const raw = Buffer.from(await file.arrayBuffer());
   const mime = resolveMime(file, raw);
   if (!mime) {
-    throw new Error("פורמט לא נתמך (PNG / JPG / WEBP / SVG)");
+    throw new Error("صيغة غير مدعومة (PNG / JPG / WEBP / SVG)");
   }
 
   try {
@@ -96,6 +96,6 @@ export async function readLogoUpload(file: File): Promise<{
 
     return { data: png, mimeType: "image/png" };
   } catch {
-    throw new Error("לא ניתן לעבד את קובץ הלוגו. נסו PNG שקוף.");
+    throw new Error("تعذّر معالجة ملف الشعار. جرّبوا PNG شفافًا.");
   }
 }

@@ -12,18 +12,18 @@ export async function POST(request: Request) {
       slug: z.string().min(1),
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       time: z.string().regex(/^\d{2}:\d{2}$/),
-      customerName: z.string().min(2, "נא להזין שם").max(80),
+      customerName: z.string().min(2, "يرجى إدخال الاسم").max(80),
       customerPhone: z
         .string()
-        .min(9, "נא להזין טלפון")
+        .min(9, "يرجى إدخال رقم الهاتف")
         .max(20)
-        .regex(/^[\d+\-\s()]+$/, "טלפון לא תקין"),
+        .regex(/^[\d+\-\s()]+$/, "رقم هاتف غير صالح"),
     });
 
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message || "נתונים לא תקינים" },
+        { error: parsed.error.issues[0]?.message || "بيانات غير صالحة" },
         { status: 400 },
       );
     }
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       where: { slug: parsed.data.slug },
     });
     if (!field || !field.isActive) {
-      return NextResponse.json({ error: "המגרש לא נמצא" }, { status: 404 });
+      return NextResponse.json({ error: "الملعب غير موجود" }, { status: 404 });
     }
 
     const booking = await createPublicHold({
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     let sms: Awaited<ReturnType<typeof sendSms>> = {
       ok: false,
       skipped: true,
-      error: "SMS כבוי למגרש זה",
+      error: "SMS متوقفة لهذا الملعب",
     };
 
     if (field.smsPlanEnabled && sms019Configured()) {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       sms = {
         ok: false,
         skipped: true,
-        error: "019 SMS לא מוגדר בשרת",
+        error: "019 SMS غير مُعدّ على الخادم",
       };
     }
 
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     return NextResponse.json(
-      { error: message || "השריון נכשל" },
+      { error: message || "فشل الحجز" },
       { status: 409 },
     );
   }

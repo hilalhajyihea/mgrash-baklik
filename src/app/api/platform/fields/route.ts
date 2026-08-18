@@ -7,7 +7,7 @@ import { createField, isValidSlug, resetFieldPassword } from "@/lib/fields";
 export async function GET() {
   const session = await requirePlatformSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const fields = await prisma.field.findMany({
@@ -42,21 +42,21 @@ const createSchema = z.object({
 export async function POST(request: Request) {
   const session = await requirePlatformSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message || "נתונים לא תקינים" },
+      { error: parsed.error.issues[0]?.message || "بيانات غير صالحة" },
       { status: 400 },
     );
   }
 
   if (!isValidSlug(parsed.data.slug)) {
     return NextResponse.json(
-      { error: "כתובת לא תקינה (למשל: ramat-gan)" },
+      { error: "عنوان غير صالح (مثال: ramat-gan)" },
       { status: 400 },
     );
   }
@@ -72,10 +72,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "לא ניתן ליצור מגרש";
+      error instanceof Error ? error.message : "تعذّر إنشاء الملعب";
     if (message.includes("Unique") || message.includes("unique")) {
       return NextResponse.json(
-        { error: "שם משתמש או כתובת כבר קיימים" },
+        { error: "اسم المستخدم أو العنوان موجود مسبقًا" },
         { status: 409 },
       );
     }
@@ -94,13 +94,13 @@ const patchSchema = z.object({
 export async function PATCH(request: Request) {
   const session = await requirePlatformSession();
   if (!session) {
-    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
+    return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
   }
 
   if (parsed.data.password) {
