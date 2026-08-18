@@ -86,8 +86,8 @@ export async function readLogoUpload(file: File): Promise<{
   try {
     const png = await sharp(raw, { density: 300 })
       .resize({
-        width: 1280,
-        height: 360,
+        width: 1600,
+        height: 480,
         fit: "contain",
         background: { r: 0, g: 0, b: 0, alpha: 0 },
       })

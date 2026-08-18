@@ -131,7 +131,7 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
               <img
                 src={logoUrl}
                 alt={displayName}
-                className="h-auto max-h-24 w-auto max-w-[min(100%,22rem)] object-contain object-right drop-shadow-[0_12px_28px_rgba(0,0,0,0.45)] sm:max-h-32"
+                className="h-auto max-h-36 w-auto max-w-[min(100%,40rem)] object-contain object-right drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)] sm:max-h-48"
               />
             </div>
           ) : (
