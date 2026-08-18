@@ -52,20 +52,38 @@ export async function POST(request: Request) {
       holdMinutes: field.holdMinutes,
     });
 
-    let sms: Awaited<ReturnType<typeof sendSms>> = {
-      ok: false,
-      skipped: true,
-      error: "SMS متوقفة لهذا الملعب",
-    };
+    if (!sms019Configured()) {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: "EXPIRED" },
+      });
+      return NextResponse.json(
+        { error: "تعذّر إرسال SMS. حاولوا مرة أخرى أو راجعوا الإدارة." },
+        { status: 503 },
+      );
+    }
 
-    if (field.smsPlanEnabled && sms019Configured()) {
-      sms = await sendSms(booking.customerPhone, smsBody);
-    } else if (!sms019Configured()) {
-      sms = {
-        ok: false,
-        skipped: true,
-        error: "019 SMS غير مُعدّ على الخادم",
-      };
+    if (!field.smsPlanEnabled) {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: "EXPIRED" },
+      });
+      return NextResponse.json(
+        { error: "خدمة SMS غير مفعّلة لهذا الملعب." },
+        { status: 503 },
+      );
+    }
+
+    const sms = await sendSms(booking.customerPhone, smsBody);
+    if (!sms.ok) {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: "EXPIRED" },
+      });
+      return NextResponse.json(
+        { error: sms.error || "فشل إرسال رسالة التأكيد. حاولوا مرة أخرى." },
+        { status: 503 },
+      );
     }
 
     return NextResponse.json({
@@ -75,11 +93,10 @@ export async function POST(request: Request) {
         status: booking.status,
         holdExpiresAt: booking.holdExpiresAt?.toISOString() ?? null,
       },
-      confirmUrl: sms.ok && !sms.skipped ? null : confirmUrl,
       sms: {
-        ok: !!sms.ok,
-        skipped: !!sms.skipped,
-        error: sms.error || null,
+        ok: true,
+        skipped: false,
+        error: null,
       },
     });
   } catch (error) {

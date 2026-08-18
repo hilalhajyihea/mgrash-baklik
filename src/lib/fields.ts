@@ -53,6 +53,8 @@ export async function createField(input: {
       username: input.username.trim(),
       passwordHash,
       slotMinutes: input.slotMinutes ?? 60,
+      holdMinutes: 15,
+      smsPlanEnabled: true,
       workingHours: {
         create: DEFAULT_HOURS,
       },

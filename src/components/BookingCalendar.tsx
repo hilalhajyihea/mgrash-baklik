@@ -34,7 +34,6 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [confirmUrl, setConfirmUrl] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +62,6 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
     e.preventDefault();
     setError("");
     setSuccess("");
-    setConfirmUrl("");
     setSubmitting(true);
     try {
       const res = await fetch("/api/bookings", {
@@ -83,17 +81,9 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
         return;
       }
 
-      if (data.sms?.ok && !data.sms?.skipped) {
-        setSuccess(
-          `أُرسلت إليكم رسالة SMS. اضغطوا على الرابط خلال 15 دقيقة لتأكيد ${formatDateHe(combineDateAndTime(date, "12:00"))} الساعة ${time}.`,
-        );
-      } else {
-        setSuccess(
-          `حُفظت الساعة مؤقتًا لـ ${formatDateHe(combineDateAndTime(date, "12:00"))} الساعة ${time}. أكّدوا عبر الرابط أدناه.`,
-        );
-        if (data.confirmUrl) setConfirmUrl(data.confirmUrl);
-        if (data.sms?.error && !data.sms?.skipped) setError(data.sms.error);
-      }
+      setSuccess(
+        `أُرسلت إليكم رسالة SMS. اضغطوا على الرابط خلال 15 دقيقة لتأكيد ${formatDateHe(combineDateAndTime(date, "12:00"))} الساعة ${time}. بدون تأكيد تُحرَّر الساعة.`,
+      );
       setName("");
       setPhone("");
       setTime("");
@@ -229,14 +219,6 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
                 {success}
               </p>
             ) : null}
-            {confirmUrl ? (
-              <p className="mt-3 text-sm">
-                <Link href={confirmUrl} className="underline text-[var(--lime)]">
-                  اضغطوا هنا لتأكيد الحجز
-                </Link>
-              </p>
-            ) : null}
-
             <button
               type="submit"
               disabled={submitting || !time}

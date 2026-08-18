@@ -19,7 +19,7 @@ model Field {
   /// How long a public hold waits for SMS confirmation
   holdMinutes    Int      @default(15)
   /// Platform admin: allows this field to send customer SMS
-  smsPlanEnabled Boolean  @default(false)
+  smsPlanEnabled Boolean  @default(true)
   /// Owner mobile (optional, for later alerts)
   phone          String?
   /// Public logo URL path (API). When set, replaces the name in the hero.
