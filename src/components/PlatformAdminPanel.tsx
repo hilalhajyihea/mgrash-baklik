@@ -16,6 +16,7 @@ type FieldRow = {
   smsPlanEnabled: boolean;
   logoUrl: string | null;
   logoMimeType: string | null;
+  introText: string | null;
   _count: { bookings: number };
 };
 
@@ -29,6 +30,7 @@ export function PlatformAdminPanel() {
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [introDrafts, setIntroDrafts] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,7 +41,13 @@ export function PlatformAdminPanel() {
         return;
       }
       const data = await res.json();
-      setFields(data.fields || []);
+      const list = data.fields || [];
+      setFields(list);
+      setIntroDrafts(
+        Object.fromEntries(
+          list.map((f: FieldRow) => [f.id, f.introText || ""]),
+        ),
+      );
     } catch {
       setError("خطأ في التحميل");
     } finally {
@@ -212,8 +220,9 @@ export function PlatformAdminPanel() {
         {fields.map((field) => (
           <div
             key={field.id}
-            className="surface-dark flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between"
+            className="surface-dark flex flex-col gap-3 rounded-2xl p-4"
           >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               {field.logoMimeType ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -304,6 +313,36 @@ export function PlatformAdminPanel() {
                 كلمة المرور
               </button>
             </div>
+            </div>
+            <label className="block text-sm text-[rgba(244,248,238,0.78)]">
+              نص تحت الشعار (يظهر في صفحة الحجز)
+              <textarea
+                className="shop-field mt-1.5 min-h-20 w-full rounded-xl px-3 py-2.5"
+                rows={3}
+                maxLength={500}
+                placeholder="مثلاً: ملعب الإتحاد — عشب طبيعي، إضاءة ليلية"
+                value={introDrafts[field.id] ?? field.introText ?? ""}
+                onChange={(e) =>
+                  setIntroDrafts((prev) => ({
+                    ...prev,
+                    [field.id]: e.target.value,
+                  }))
+                }
+              />
+            </label>
+            <button
+              type="button"
+              className="btn-primary self-start rounded-xl px-4 py-2 text-sm font-semibold"
+              onClick={() =>
+                patchField(
+                  field.id,
+                  { introText: introDrafts[field.id] ?? "" },
+                  "تم حفظ النص",
+                )
+              }
+            >
+              حفظ النص
+            </button>
           </div>
         ))}
       </div>

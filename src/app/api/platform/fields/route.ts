@@ -23,6 +23,7 @@ export async function GET() {
       smsPlanEnabled: true,
       logoUrl: true,
       logoMimeType: true,
+      introText: true,
       createdAt: true,
       _count: { select: { bookings: true } },
     },
@@ -89,6 +90,7 @@ const patchSchema = z.object({
   smsPlanEnabled: z.boolean().optional(),
   password: z.string().min(6).max(100).optional(),
   displayName: z.string().min(2).max(80).optional(),
+  introText: z.string().max(500).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -118,6 +120,9 @@ export async function PATCH(request: Request) {
         : {}),
       ...(parsed.data.displayName
         ? { displayName: parsed.data.displayName.trim() }
+        : {}),
+      ...(parsed.data.introText !== undefined
+        ? { introText: parsed.data.introText.trim() || null }
         : {}),
     },
   });

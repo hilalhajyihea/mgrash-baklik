@@ -9,9 +9,10 @@ type Props = {
   slug: string;
   displayName: string;
   logoUrl?: string | null;
+  introText?: string | null;
 };
 
-export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
+export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props) {
   const dates = useMemo(() => {
     const list: { key: string; label: string }[] = [];
     const todayKey = toDateKey();
@@ -140,6 +141,11 @@ export function BookingCalendar({ slug, displayName, logoUrl }: Props) {
             </h1>
           )}
           <div className="flood-line mt-5" />
+          {introText ? (
+            <p className="mt-4 max-w-lg whitespace-pre-line text-base text-[rgba(244,248,238,0.9)] sm:text-lg">
+              {introText}
+            </p>
+          ) : null}
           <p className="mt-4 max-w-md text-base text-[rgba(244,248,238,0.82)] sm:text-lg">
             اختاروا التاريخ والساعة، وأدخلوا الاسم والهاتف. الحجز يكون نهائي بعد الضغط على الرابط الذي سيصلكم عبر SMS.
           </p>

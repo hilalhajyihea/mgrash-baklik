@@ -30,6 +30,7 @@ export default async function FieldPublicPage({ params }: Props) {
       displayName: true,
       isActive: true,
       logoMimeType: true,
+      introText: true,
     },
   });
   if (!field || !field.isActive) notFound();
@@ -44,6 +45,7 @@ export default async function FieldPublicPage({ params }: Props) {
         slug={field.slug}
         displayName={field.displayName}
         logoUrl={logoUrl}
+        introText={field.introText}
       />
     </main>
   );

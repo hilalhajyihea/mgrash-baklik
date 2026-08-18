@@ -27,6 +27,8 @@ model Field {
   /// Binary logo payload stored in DB (survives Render deploys)
   logoData       Bytes?
   logoMimeType   String?
+  /// Optional text under the logo on the public booking page
+  introText      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
