@@ -9,8 +9,25 @@ export function dayName(dayOfWeek: number) {
 }
 
 export function parseTimeToMinutes(time: string): number {
+  if (time === "24:00") return 24 * 60;
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
+}
+
+/**
+ * End time 00:00 (or 24:00) after a later start means midnight at the end of the day,
+ * not 00:00 at the beginning.
+ */
+export function parseWindowEndMinutes(startTime: string, endTime: string): number {
+  if (endTime === "24:00") return 24 * 60;
+  const start = parseTimeToMinutes(startTime);
+  const end = parseTimeToMinutes(endTime);
+  if (endTime === "00:00" && start > 0) return 24 * 60;
+  return end;
+}
+
+export function isValidHourWindow(startTime: string, endTime: string): boolean {
+  return parseTimeToMinutes(startTime) < parseWindowEndMinutes(startTime, endTime);
 }
 
 export function minutesToTime(total: number): string {

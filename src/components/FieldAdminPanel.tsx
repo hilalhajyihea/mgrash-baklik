@@ -403,6 +403,7 @@ export function FieldAdminPanel({
         <form onSubmit={saveHours} className="surface-dark mt-6 space-y-5 rounded-2xl p-5">
           <p className="text-sm text-[rgba(244,248,238,0.62)]">
             يمكن إضافة أكثر من فترة في نفس اليوم، مثل 14:00–15:30 و22:00–23:30.
+            لإنهاء الفترة عند منتصف الليل اكتبوا 23:00 حتى 00:00.
           </p>
           {Array.from({ length: 7 }, (_, dayOfWeek) => {
             const windows = hours.filter((h) => h.dayOfWeek === dayOfWeek);

@@ -7,6 +7,7 @@ import {
   getJerusalemDayOfWeek,
   minutesToTime,
   parseTimeToMinutes,
+  parseWindowEndMinutes,
   startOfJerusalemDay,
 } from "@/lib/time";
 
@@ -33,7 +34,7 @@ function buildSlotsFromWindow(input: {
   bookings: { startsAt: Date; endsAt: Date }[];
 }) {
   const startMin = parseTimeToMinutes(input.startTime);
-  const endMin = parseTimeToMinutes(input.endTime);
+  const endMin = parseWindowEndMinutes(input.startTime, input.endTime);
   const now = new Date();
   const slots: string[] = [];
 

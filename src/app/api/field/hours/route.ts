@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireFieldSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isValidHourWindow, parseWindowEndMinutes } from "@/lib/time";
 
 const windowSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
@@ -46,7 +47,7 @@ export async function PUT(request: Request) {
 
   const hours = parsed.data.hours;
   for (const h of hours) {
-    if (h.startTime >= h.endTime) {
+    if (!isValidHourWindow(h.startTime, h.endTime)) {
       return NextResponse.json(
         { error: "ساعة الانتهاء يجب أن تكون بعد ساعة البداية" },
         { status: 400 },
@@ -65,7 +66,10 @@ export async function PUT(request: Request) {
       (a, b) => toMinutes(a.startTime) - toMinutes(b.startTime),
     );
     for (let i = 1; i < sorted.length; i++) {
-      if (toMinutes(sorted[i]!.startTime) < toMinutes(sorted[i - 1]!.endTime)) {
+      if (
+        toMinutes(sorted[i]!.startTime) <
+        parseWindowEndMinutes(sorted[i - 1]!.startTime, sorted[i - 1]!.endTime)
+      ) {
         return NextResponse.json(
           { error: "الفترات في نفس اليوم تتداخل" },
           { status: 400 },
