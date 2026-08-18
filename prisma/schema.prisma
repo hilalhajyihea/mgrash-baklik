@@ -47,7 +47,7 @@ model WorkingHours {
 
   field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
-  @@unique([fieldId, dayOfWeek])
+  @@index([fieldId, dayOfWeek])
   @@index([fieldId])
 }
 

@@ -5,6 +5,7 @@ import { sanitizeToken } from "@/lib/tokens";
 import { formatDateHe, formatTime } from "@/lib/time";
 import { BrandMark } from "@/components/BrandGraphics";
 import { ConfirmHoldButton } from "@/components/ConfirmHoldButton";
+import { CancelHoldButton } from "@/components/CancelHoldButton";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,13 @@ export default async function ConfirmPage({ params }: Props) {
   const preview = token
     ? await peekHold(token)
     : { kind: "missing" as const };
+
+  const fieldHref =
+    preview.kind === "hold" || preview.kind === "confirmed"
+      ? `/${preview.fieldSlug}`
+      : preview.kind !== "missing" && preview.fieldSlug
+        ? `/${preview.fieldSlug}`
+        : "/";
 
   return (
     <main className="shop-shell flex flex-1 items-center justify-center px-4 py-12">
@@ -52,6 +60,7 @@ export default async function ConfirmPage({ params }: Props) {
               <br />
               {formatDateHe(preview.startsAt)} الساعة {formatTime(preview.startsAt)}
             </p>
+            <CancelHoldButton token={token} />
           </>
         ) : (
           <>
@@ -68,10 +77,10 @@ export default async function ConfirmPage({ params }: Props) {
           </>
         )}
         <Link
-          href="/"
+          href={fieldHref}
           className="mt-8 inline-block rounded-xl border border-white/20 px-6 py-3 font-semibold"
         >
-          العودة إلى ملعب بكبسة زر
+          العودة إلى الملعب
         </Link>
       </div>
     </main>

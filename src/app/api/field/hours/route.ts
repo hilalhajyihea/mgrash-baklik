@@ -3,16 +3,20 @@ import { z } from "zod";
 import { requireFieldSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-const hourSchema = z.object({
+const windowSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
   startTime: z.string().regex(/^\d{2}:\d{2}$/),
   endTime: z.string().regex(/^\d{2}:\d{2}$/),
-  enabled: z.boolean(),
 });
 
 const schema = z.object({
-  hours: z.array(hourSchema).length(7),
+  hours: z.array(windowSchema).max(70),
 });
+
+function toMinutes(time: string) {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
 
 export async function GET() {
   const session = await requireFieldSession();
@@ -22,7 +26,7 @@ export async function GET() {
 
   const hours = await prisma.workingHours.findMany({
     where: { fieldId: session.fieldId },
-    orderBy: { dayOfWeek: "asc" },
+    orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
   });
 
   return NextResponse.json({ hours });
@@ -40,8 +44,9 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
   }
 
-  for (const h of parsed.data.hours) {
-    if (h.enabled && h.startTime >= h.endTime) {
+  const hours = parsed.data.hours;
+  for (const h of hours) {
+    if (h.startTime >= h.endTime) {
       return NextResponse.json(
         { error: "ساعة الانتهاء يجب أن تكون بعد ساعة البداية" },
         { status: 400 },
@@ -49,12 +54,31 @@ export async function PUT(request: Request) {
     }
   }
 
+  const byDay = new Map<number, { startTime: string; endTime: string }[]>();
+  for (const h of hours) {
+    const list = byDay.get(h.dayOfWeek) || [];
+    list.push({ startTime: h.startTime, endTime: h.endTime });
+    byDay.set(h.dayOfWeek, list);
+  }
+  for (const list of byDay.values()) {
+    const sorted = [...list].sort(
+      (a, b) => toMinutes(a.startTime) - toMinutes(b.startTime),
+    );
+    for (let i = 1; i < sorted.length; i++) {
+      if (toMinutes(sorted[i]!.startTime) < toMinutes(sorted[i - 1]!.endTime)) {
+        return NextResponse.json(
+          { error: "الفترات في نفس اليوم تتداخل" },
+          { status: 400 },
+        );
+      }
+    }
+  }
+
   await prisma.$transaction(async (tx) => {
     await tx.workingHours.deleteMany({ where: { fieldId: session.fieldId } });
-    const enabled = parsed.data.hours.filter((h) => h.enabled);
-    if (enabled.length > 0) {
+    if (hours.length > 0) {
       await tx.workingHours.createMany({
-        data: enabled.map((h) => ({
+        data: hours.map((h) => ({
           fieldId: session.fieldId,
           dayOfWeek: h.dayOfWeek,
           startTime: h.startTime,

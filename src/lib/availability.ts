@@ -63,8 +63,8 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
   if (!field || !field.isActive) return [];
 
   const dayOfWeek = getJerusalemDayOfWeek(combineDateAndTime(dateKey, "12:00"));
-  const hours = field.workingHours.find((h) => h.dayOfWeek === dayOfWeek);
-  if (!hours) return [];
+  const windows = field.workingHours.filter((h) => h.dayOfWeek === dayOfWeek);
+  if (windows.length === 0) return [];
 
   const dayOff = await prisma.dayOff.findUnique({
     where: {
@@ -84,13 +84,19 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
     },
   });
 
-  return buildSlotsFromWindow({
-    dateKey,
-    startTime: hours.startTime,
-    endTime: hours.endTime,
-    slotMinutes: field.slotMinutes,
-    bookings,
-  });
+  const slots = new Set<string>();
+  for (const hours of windows) {
+    for (const time of buildSlotsFromWindow({
+      dateKey,
+      startTime: hours.startTime,
+      endTime: hours.endTime,
+      slotMinutes: field.slotMinutes,
+      bookings,
+    })) {
+      slots.add(time);
+    }
+  }
+  return Array.from(slots).sort();
 }
 
 export async function createPublicHold(input: {
@@ -200,21 +206,26 @@ export type HoldPreview =
   | {
       kind: "hold";
       fieldName: string;
+      fieldSlug: string;
       startsAt: Date;
       customerName: string;
     }
   | {
       kind: "confirmed";
       fieldName: string;
+      fieldSlug: string;
       startsAt: Date;
     }
-  | { kind: "expired" | "cancelled" | "missing" };
+  | {
+      kind: "expired" | "cancelled" | "missing";
+      fieldSlug?: string;
+    };
 
 async function loadBookingByToken(rawToken: string) {
   await expireHolds();
   return prisma.booking.findUnique({
     where: { confirmToken: rawToken },
-    include: { field: { select: { displayName: true } } },
+    include: { field: { select: { displayName: true, slug: true } } },
   });
 }
 
@@ -225,17 +236,23 @@ function classifyBooking(
     return {
       kind: "confirmed",
       fieldName: booking.field.displayName,
+      fieldSlug: booking.field.slug,
       startsAt: booking.startsAt,
     };
   }
-  if (booking.status === "CANCELLED") return { kind: "cancelled" };
-  if (booking.status !== "HOLD") return { kind: "expired" };
+  if (booking.status === "CANCELLED") {
+    return { kind: "cancelled", fieldSlug: booking.field.slug };
+  }
+  if (booking.status !== "HOLD") {
+    return { kind: "expired", fieldSlug: booking.field.slug };
+  }
   if (booking.holdExpiresAt && booking.holdExpiresAt < new Date()) {
-    return { kind: "expired" };
+    return { kind: "expired", fieldSlug: booking.field.slug };
   }
   return {
     kind: "hold",
     fieldName: booking.field.displayName,
+    fieldSlug: booking.field.slug,
     startsAt: booking.startsAt,
     customerName: booking.customerName,
   };
@@ -255,7 +272,7 @@ export async function peekHold(rawToken: string): Promise<HoldPreview> {
       where: { id: booking.id },
       data: { status: "EXPIRED" },
     });
-    return { kind: "expired" };
+    return { kind: "expired", fieldSlug: booking.field.slug };
   }
 
   return classifyBooking(booking);

@@ -186,6 +186,19 @@ export function buildHoldConfirmSms(input: {
   ].join("\n");
 }
 
+export function buildOwnerCancelSms(input: {
+  customerName: string;
+  fieldName: string;
+  startsAt: Date;
+}): string {
+  return [
+    `إلغاء حجز في ${input.fieldName}`,
+    `${formatDateHe(input.startsAt)} الساعة ${formatTime(input.startsAt)}`,
+    `الزبون: ${input.customerName}`,
+    BRAND,
+  ].join("\n");
+}
+
 export function buildConfirmedSms(input: {
   customerName: string;
   fieldName: string;

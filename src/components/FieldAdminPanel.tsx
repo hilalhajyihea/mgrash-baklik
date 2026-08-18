@@ -23,11 +23,10 @@ type Booking = {
   source: string;
 };
 
-type HourRow = {
+type HourWindow = {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
-  enabled: boolean;
 };
 
 type DayOff = {
@@ -36,20 +35,11 @@ type DayOff = {
   note: string | null;
 };
 
-const defaultHours = (): HourRow[] =>
+const defaultHours = (): HourWindow[] =>
   Array.from({ length: 7 }, (_, dayOfWeek) => ({
     dayOfWeek,
     startTime: dayOfWeek === 6 ? "08:00" : "16:00",
     endTime: dayOfWeek === 5 ? "22:00" : dayOfWeek === 6 ? "22:00" : "23:00",
-    enabled: true,
-  }));
-
-const blankHours = (): HourRow[] =>
-  Array.from({ length: 7 }, (_, dayOfWeek) => ({
-    dayOfWeek,
-    startTime: "16:00",
-    endTime: "23:00",
-    enabled: false,
   }));
 
 export function FieldAdminPanel({
@@ -60,11 +50,13 @@ export function FieldAdminPanel({
   displayName: string;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"bookings" | "book" | "hours" | "daysOff">(
-    "bookings",
-  );
+  const [tab, setTab] = useState<
+    "bookings" | "book" | "hours" | "daysOff" | "sms"
+  >("bookings");
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [hours, setHours] = useState<HourRow[]>(defaultHours());
+  const [hours, setHours] = useState<HourWindow[]>(defaultHours());
+  const [ownerPhone, setOwnerPhone] = useState("");
+  const [smsPlanEnabled, setSmsPlanEnabled] = useState(false);
   const [dayOffs, setDayOffs] = useState<DayOff[]>([]);
   const [offDate, setOffDate] = useState("");
   const [offNote, setOffNote] = useState("");
@@ -80,10 +72,11 @@ export function FieldAdminPanel({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [bRes, hRes, dRes] = await Promise.all([
+      const [bRes, hRes, dRes, sRes] = await Promise.all([
         fetch("/api/field/bookings"),
         fetch("/api/field/hours"),
         fetch("/api/field/days-off"),
+        fetch("/api/field/sms-settings"),
       ]);
       if (bRes.status === 401) {
         router.push(`/${slug}/login`);
@@ -92,18 +85,18 @@ export function FieldAdminPanel({
       const bData = await bRes.json();
       const hData = await hRes.json();
       const dData = await dRes.json();
+      const sData = await sRes.json();
       setBookings(bData.bookings || []);
-      const next = blankHours();
-      for (const row of hData.hours || []) {
-        next[row.dayOfWeek] = {
+      setHours(
+        (hData.hours || []).map((row: HourWindow) => ({
           dayOfWeek: row.dayOfWeek,
           startTime: row.startTime,
           endTime: row.endTime,
-          enabled: true,
-        };
-      }
-      setHours(next);
+        })),
+      );
       setDayOffs(dData.dayOffs || []);
+      setOwnerPhone(sData.phone || "");
+      setSmsPlanEnabled(!!sData.smsPlanEnabled);
     } catch {
       setError("خطأ في التحميل");
     } finally {
@@ -153,6 +146,58 @@ export function FieldAdminPanel({
       return;
     }
     setMessage("تم حفظ ساعات التأجير");
+  }
+
+  async function saveSmsSettings(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    const res = await fetch("/api/field/sms-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: ownerPhone }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "فشل حفظ إعدادات SMS");
+      return;
+    }
+    setOwnerPhone(data.phone || "");
+    setMessage("تم حفظ رقم التنبيه");
+  }
+
+  function addHourWindow(dayOfWeek: number) {
+    setHours((rows) => [
+      ...rows,
+      { dayOfWeek, startTime: "16:00", endTime: "17:00" },
+    ]);
+  }
+
+  function removeHourWindow(dayOfWeek: number, indexInDay: number) {
+    setHours((rows) => {
+      let seen = 0;
+      return rows.filter((row) => {
+        if (row.dayOfWeek !== dayOfWeek) return true;
+        const keep = seen !== indexInDay;
+        seen += 1;
+        return keep;
+      });
+    });
+  }
+
+  function updateHourWindow(
+    dayOfWeek: number,
+    indexInDay: number,
+    patch: Partial<Pick<HourWindow, "startTime" | "endTime">>,
+  ) {
+    setHours((rows) => {
+      let seen = 0;
+      return rows.map((row) => {
+        if (row.dayOfWeek !== dayOfWeek) return row;
+        const current = seen;
+        seen += 1;
+        return current === indexInDay ? { ...row, ...patch } : row;
+      });
+    });
   }
 
   async function addDayOff(e: FormEvent) {
@@ -222,6 +267,7 @@ export function FieldAdminPanel({
     { id: "book" as const, label: "إضافة حجز" },
     { id: "hours" as const, label: "ساعات التأجير" },
     { id: "daysOff" as const, label: "أيام الإغلاق" },
+    { id: "sms" as const, label: "SMS" },
   ];
 
   return (
@@ -354,59 +400,67 @@ export function FieldAdminPanel({
       ) : null}
 
       {tab === "hours" ? (
-        <form onSubmit={saveHours} className="surface-dark mt-6 space-y-3 rounded-2xl p-5">
-          {hours.map((h) => (
-            <div
-              key={h.dayOfWeek}
-              className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-2"
-            >
-              <label className="text-sm">{dayName(h.dayOfWeek)}</label>
-              <input
-                type="time"
-                className="shop-field rounded-xl px-2 py-2"
-                value={h.startTime}
-                onChange={(e) =>
-                  setHours((rows) =>
-                    rows.map((r) =>
-                      r.dayOfWeek === h.dayOfWeek
-                        ? { ...r, startTime: e.target.value }
-                        : r,
-                    ),
-                  )
-                }
-              />
-              <input
-                type="time"
-                className="shop-field rounded-xl px-2 py-2"
-                value={h.endTime}
-                onChange={(e) =>
-                  setHours((rows) =>
-                    rows.map((r) =>
-                      r.dayOfWeek === h.dayOfWeek
-                        ? { ...r, endTime: e.target.value }
-                        : r,
-                    ),
-                  )
-                }
-              />
-              <label className="text-sm">
-                <input
-                  type="checkbox"
-                  checked={h.enabled}
-                  onChange={(e) =>
-                    setHours((rows) =>
-                      rows.map((r) =>
-                        r.dayOfWeek === h.dayOfWeek
-                          ? { ...r, enabled: e.target.checked }
-                          : r,
-                      ),
-                    )
-                  }
-                />{" "}
-                مفتوح
-              </label>
-            </div>
-          ))}
+        <form onSubmit={saveHours} className="surface-dark mt-6 space-y-5 rounded-2xl p-5">
+          <p className="text-sm text-[rgba(244,248,238,0.62)]">
+            يمكن إضافة أكثر من فترة في نفس اليوم، مثل 14:00–15:30 و22:00–23:30.
+          </p>
+          {Array.from({ length: 7 }, (_, dayOfWeek) => {
+            const windows = hours.filter((h) => h.dayOfWeek === dayOfWeek);
+            return (
+              <div key={dayOfWeek} className="border-b border-white/10 pb-4 last:border-0">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="font-semibold">{dayName(dayOfWeek)}</p>
+                  <button
+                    type="button"
+                    className="shop-chip rounded-xl px-3 py-1.5 text-sm"
+                    onClick={() => addHourWindow(dayOfWeek)}
+                  >
+                    إضافة فترة
+                  </button>
+                </div>
+                {windows.length === 0 ? (
+                  <p className="text-sm text-[rgba(244,248,238,0.5)]">مغلق</p>
+                ) : (
+                  <div className="space-y-2">
+                    {windows.map((h, indexInDay) => (
+                      <div
+                        key={`${dayOfWeek}-${indexInDay}`}
+                        className="grid grid-cols-[1fr_1fr_auto] items-center gap-2"
+                      >
+                        <input
+                          type="time"
+                          className="shop-field rounded-xl px-2 py-2"
+                          value={h.startTime}
+                          onChange={(e) =>
+                            updateHourWindow(dayOfWeek, indexInDay, {
+                              startTime: e.target.value,
+                            })
+                          }
+                        />
+                        <input
+                          type="time"
+                          className="shop-field rounded-xl px-2 py-2"
+                          value={h.endTime}
+                          onChange={(e) =>
+                            updateHourWindow(dayOfWeek, indexInDay, {
+                              endTime: e.target.value,
+                            })
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="shop-chip rounded-xl px-3 py-2 text-sm"
+                          onClick={() => removeHourWindow(dayOfWeek, indexInDay)}
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <button type="submit" className="btn-primary w-full rounded-xl py-3 font-semibold">
             حفظ الساعات
           </button>
@@ -454,6 +508,28 @@ export function FieldAdminPanel({
             </div>
           ))}
         </div>
+      ) : null}
+
+      {tab === "sms" ? (
+        <form onSubmit={saveSmsSettings} className="surface-dark mt-6 space-y-4 rounded-2xl p-5">
+          <p className="text-sm text-[rgba(244,248,238,0.62)]">
+            رقم هاتف صاحب الملعب. عند إلغاء حجز مؤكَّد تُرسل رسالة تنبيه إلى هذا الرقم.
+            {smsPlanEnabled ? "" : " خدمة SMS غير مفعّلة لهذا الملعب من الإدارة."}
+          </p>
+          <label className="block text-sm">
+            رقم التنبيه
+            <input
+              className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
+              value={ownerPhone}
+              onChange={(e) => setOwnerPhone(e.target.value)}
+              inputMode="tel"
+              placeholder="0500000000"
+            />
+          </label>
+          <button type="submit" className="btn-primary w-full rounded-xl py-3 font-semibold">
+            حفظ رقم SMS
+          </button>
+        </form>
       ) : null}
     </div>
   );
