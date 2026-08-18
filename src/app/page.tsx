@@ -48,8 +48,7 @@ export default function HomePage() {
           </h1>
           <div className="flood-line mt-5" />
           <p className="mt-5 max-w-lg text-lg leading-relaxed text-[rgba(244,248,238,0.82)]">
-            الزبائن يحجزون ساعة من الهاتف. الملعب يبقى مرتّبًا — والحجز يُغلق
-            فقط بعد التأكيد برسالة SMS.
+            الزبائن يحجزون ساعة من الهاتف. الملعب يبقى مرتّبًا — الحجز يكون نهائي بعد الضغط على الرابط الذي سيصلكم عبر SMS.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
