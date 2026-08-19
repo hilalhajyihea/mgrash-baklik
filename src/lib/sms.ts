@@ -180,7 +180,8 @@ export function buildHoldConfirmSms(input: {
     `مرحباً ${input.customerName},`,
     `لتأكيد الحجز في ${input.fieldName}`,
     `${formatDateHe(input.startsAt)} الساعة ${formatTime(input.startsAt)}`,
-    `اضغطوا على الرابط خلال ${input.holdMinutes} دقيقة:`,
+    `اضغطوا على الرابط خلال ${input.holdMinutes} دقيقة للتأكيد.`,
+    `بعد التأكيد يمكنكم إلغاء الحجز من نفس الرابط.`,
     input.confirmUrl,
     BRAND,
   ].join("\n");
