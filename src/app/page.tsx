@@ -82,6 +82,72 @@ export default function HomePage() {
           ))}
         </ul>
 
+        <section className="mt-16">
+          <h2 className="font-display text-3xl text-[var(--cream)]">الأسعار</h2>
+          <p className="mt-2 text-sm text-[rgba(244,248,238,0.62)]">
+            للاشتراك في الباقتين تواصلوا عبر واتساب {SITE_ADMIN_PHONE}
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <article className="surface-dark flex flex-col rounded-2xl p-6">
+              <p className="text-sm font-semibold text-[var(--lime)]">ملعب واحد</p>
+              <p className="font-display mt-2 text-4xl text-[var(--cream)]">
+                149 ₪
+                <span className="mr-2 text-base font-sans font-normal text-[rgba(244,248,238,0.62)]">
+                  / شهريًا
+                </span>
+              </p>
+              <ul className="mt-4 space-y-2 text-sm leading-relaxed text-[rgba(244,248,238,0.82)]">
+                <li>إدارة كاملة لكل الميزات</li>
+                <li>رسائل SMS وتأكيد الحجز</li>
+                <li>تنبيهات لصاحب الملعب</li>
+                <li>جدول ساعات، أيام إغلاق، ولوحة حجوزات</li>
+              </ul>
+              <a
+                href={SITE_ADMIN_WHATSAPP}
+                className="btn-primary mt-6 rounded-xl px-5 py-3 text-center font-semibold"
+              >
+                تواصلوا عبر واتساب
+              </a>
+            </article>
+            <article className="surface-dark flex flex-col rounded-2xl p-6">
+              <p className="text-sm font-semibold text-[var(--lime)]">أكثر من ملعب</p>
+              <p className="font-display mt-2 text-3xl text-[var(--cream)]">
+                تواصلوا معنا
+              </p>
+              <p className="mt-4 text-sm leading-relaxed text-[rgba(244,248,238,0.82)]">
+                إذا كان لديكم أكثر من ملعب نبني لكم باقة مناسبة بعد محادثة قصيرة.
+              </p>
+              <a
+                href={SITE_ADMIN_WHATSAPP}
+                className="mt-auto rounded-xl border border-white/25 bg-black/25 px-5 py-3 text-center font-semibold backdrop-blur-sm transition hover:bg-black/40"
+              >
+                تواصلوا عبر واتساب
+              </a>
+            </article>
+          </div>
+        </section>
+
+        <section className="surface-dark mt-12 rounded-2xl p-6">
+          <h2 className="font-display text-2xl text-[var(--cream)]">تواصلوا معنا</h2>
+          <p className="mt-2 text-sm text-[rgba(244,248,238,0.72)]">
+            واتساب أو بريد إلكتروني — نرد في أقرب وقت.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <a
+              href={SITE_ADMIN_WHATSAPP}
+              className="btn-primary rounded-xl px-5 py-3 font-semibold"
+            >
+              واتساب {SITE_ADMIN_PHONE}
+            </a>
+            <a
+              href={`mailto:${SITE_ADMIN_EMAIL}`}
+              className="rounded-xl border border-white/25 bg-black/25 px-5 py-3 font-semibold backdrop-blur-sm transition hover:bg-black/40"
+            >
+              {SITE_ADMIN_EMAIL}
+            </a>
+          </div>
+        </section>
+
         <footer className="mt-auto py-10 text-sm text-[rgba(244,248,238,0.62)]">
           <p>
             {SITE_ADMIN_PHONE} · {SITE_ADMIN_EMAIL}
