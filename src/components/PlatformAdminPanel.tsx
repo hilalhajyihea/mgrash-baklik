@@ -148,6 +148,31 @@ export function PlatformAdminPanel() {
     await patchField(field.id, { password: next }, "تم تحديث كلمة المرور");
   }
 
+  async function deleteField(field: FieldRow) {
+    const ok = confirm(
+      `حذف ملعب "${field.displayName}" نهائيًا؟ سيُحذف الموقع والحجوزات ولن يظهر في القائمة.`,
+    );
+    if (!ok) return;
+    const typed = prompt(`اكتبوا اسم الملعب للتأكيد: ${field.displayName}`);
+    if (typed !== field.displayName) {
+      if (typed != null) setError("لم يُحذف الملعب — الاسم غير مطابق");
+      return;
+    }
+    setError("");
+    const res = await fetch("/api/platform/fields", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: field.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "فشل الحذف");
+      return;
+    }
+    setMessage(`حُذف الملعب: ${field.displayName}`);
+    load();
+  }
+
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-center justify-between gap-4">
@@ -311,6 +336,13 @@ export function PlatformAdminPanel() {
                 onClick={() => resetPassword(field)}
               >
                 كلمة المرور
+              </button>
+              <button
+                type="button"
+                className="shop-chip rounded-xl px-3 py-1.5 text-sm text-red-200"
+                onClick={() => deleteField(field)}
+              >
+                حذف الملعب
               </button>
             </div>
             </div>

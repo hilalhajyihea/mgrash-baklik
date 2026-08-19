@@ -137,3 +137,35 @@ export async function PATCH(request: Request) {
     },
   });
 }
+
+const deleteSchema = z.object({
+  id: z.string().min(1),
+});
+
+export async function DELETE(request: Request) {
+  const session = await requirePlatformSession();
+  if (!session) {
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const parsed = deleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
+  }
+
+  const existing = await prisma.field.findUnique({
+    where: { id: parsed.data.id },
+    select: { id: true, displayName: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "الملعب غير موجود" }, { status: 404 });
+  }
+
+  await prisma.field.delete({ where: { id: existing.id } });
+
+  return NextResponse.json({
+    ok: true,
+    field: { id: existing.id, displayName: existing.displayName },
+  });
+}
