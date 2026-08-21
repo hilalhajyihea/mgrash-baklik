@@ -200,6 +200,19 @@ export function buildOwnerCancelSms(input: {
   ].join("\n");
 }
 
+export function buildOwnerNewBookingSms(input: {
+  customerName: string;
+  fieldName: string;
+  startsAt: Date;
+}): string {
+  return [
+    `حجز جديد في ${input.fieldName}`,
+    `${formatDateHe(input.startsAt)} الساعة ${formatTime(input.startsAt)}`,
+    `الزبون: ${input.customerName}`,
+    BRAND,
+  ].join("\n");
+}
+
 export function buildConfirmedSms(input: {
   customerName: string;
   fieldName: string;

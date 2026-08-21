@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { buildOwnerNewBookingSms, sendSms, sms019Configured } from "@/lib/sms";
 import { generateConfirmToken } from "@/lib/tokens";
 import {
   combineDateAndTime,
@@ -226,7 +227,16 @@ async function loadBookingByToken(rawToken: string) {
   await expireHolds();
   return prisma.booking.findUnique({
     where: { confirmToken: rawToken },
-    include: { field: { select: { displayName: true, slug: true } } },
+    include: {
+      field: {
+        select: {
+          displayName: true,
+          slug: true,
+          phone: true,
+          smsPlanEnabled: true,
+        },
+      },
+    },
   });
 }
 
@@ -311,6 +321,21 @@ export async function confirmHold(rawToken: string): Promise<ConfirmResult> {
     where: { id: booking.id },
     data: { status: "CONFIRMED", confirmedAt: new Date() },
   });
+
+  if (
+    booking.field.smsPlanEnabled &&
+    booking.field.phone &&
+    sms019Configured()
+  ) {
+    await sendSms(
+      booking.field.phone,
+      buildOwnerNewBookingSms({
+        customerName: booking.customerName,
+        fieldName: booking.field.displayName,
+        startsAt: updated.startsAt,
+      }),
+    );
+  }
 
   return {
     ok: true,
