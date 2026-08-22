@@ -227,13 +227,13 @@ export function FieldAdminPanel({
   }
 
   async function cancelBooking(id: string) {
-    if (!confirm("إلغاء الحجز؟")) return;
+    if (!confirm("إلغاء الحجز؟ سيُرسل SMS للزبون.")) return;
     await fetch("/api/field/bookings/cancel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    setMessage("أُلغي الحجز");
+    setMessage("أُلغي الحجز وأُرسل إشعار للزبون");
     load();
   }
 

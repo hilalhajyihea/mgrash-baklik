@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireFieldSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { buildOwnerCancelSms, sendSms, sms019Configured } from "@/lib/sms";
+import {
+  buildCustomerCancelledByOwnerSms,
+  sendSms,
+  sms019Configured,
+} from "@/lib/sms";
 
 const schema = z.object({
   id: z.string().min(1),
@@ -22,13 +26,18 @@ export async function POST(request: Request) {
 
   const booking = await prisma.booking.findFirst({
     where: { id: parsed.data.id, fieldId: session.fieldId },
-    include: { field: { select: { displayName: true, phone: true, smsPlanEnabled: true } } },
+    include: { field: { select: { displayName: true, smsPlanEnabled: true } } },
   });
   if (!booking) {
     return NextResponse.json({ error: "الحجز غير موجود" }, { status: 404 });
   }
 
-  const wasConfirmed = booking.status === "CONFIRMED";
+  if (booking.status === "CANCELLED") {
+    return NextResponse.json({ ok: true, already: true });
+  }
+
+  const notifyCustomer =
+    booking.status === "CONFIRMED" || booking.status === "HOLD";
 
   await prisma.booking.update({
     where: { id: booking.id },
@@ -36,14 +45,14 @@ export async function POST(request: Request) {
   });
 
   if (
-    wasConfirmed &&
+    notifyCustomer &&
     booking.field.smsPlanEnabled &&
-    booking.field.phone &&
+    booking.customerPhone &&
     sms019Configured()
   ) {
     await sendSms(
-      booking.field.phone,
-      buildOwnerCancelSms({
+      booking.customerPhone,
+      buildCustomerCancelledByOwnerSms({
         customerName: booking.customerName,
         fieldName: booking.field.displayName,
         startsAt: booking.startsAt,

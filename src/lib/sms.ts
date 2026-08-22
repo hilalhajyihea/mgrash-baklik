@@ -213,6 +213,19 @@ export function buildOwnerNewBookingSms(input: {
   ].join("\n");
 }
 
+export function buildCustomerCancelledByOwnerSms(input: {
+  customerName: string;
+  fieldName: string;
+  startsAt: Date;
+}): string {
+  return [
+    `مرحباً ${input.customerName},`,
+    `أُلغي حجزكم في ${input.fieldName} من قِبل إدارة الملعب.`,
+    `${formatDateHe(input.startsAt)} الساعة ${formatTime(input.startsAt)}`,
+    BRAND,
+  ].join("\n");
+}
+
 export function buildConfirmedSms(input: {
   customerName: string;
   fieldName: string;
