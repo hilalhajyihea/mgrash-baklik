@@ -228,6 +228,18 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
             </button>
           </form>
         </div>
+
+        <footer className="mx-auto mt-10 max-w-3xl px-4 pb-2 text-center text-sm text-[rgba(244,248,238,0.62)] sm:px-6">
+          <p>
+            صاحب ملعب؟ مهتم بموقع كهذا؟{" "}
+            <Link
+              href="/"
+              className="font-semibold text-[var(--lime)] underline-offset-2 transition hover:underline"
+            >
+              اضغط هنا
+            </Link>
+          </p>
+        </footer>
       </div>
     </div>
   );
