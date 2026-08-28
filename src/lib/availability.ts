@@ -65,8 +65,7 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
   if (!field || !field.isActive) return [];
 
   const dayOfWeek = getJerusalemDayOfWeek(combineDateAndTime(dateKey, "12:00"));
-  const windows = field.workingHours.filter((h) => h.dayOfWeek === dayOfWeek);
-  if (windows.length === 0) return [];
+  const weeklyWindows = field.workingHours.filter((h) => h.dayOfWeek === dayOfWeek);
 
   const dayOff = await prisma.dayOff.findUnique({
     where: {
@@ -74,6 +73,26 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
     },
   });
   if (dayOff) return [];
+
+  const extraWindows = await prisma.extraHours.findMany({
+    where: {
+      fieldId,
+      date: dateKeyToDbDate(dateKey),
+    },
+    orderBy: { startTime: "asc" },
+  });
+
+  const allWindows = [
+    ...weeklyWindows.map((h) => ({
+      startTime: h.startTime,
+      endTime: h.endTime,
+    })),
+    ...extraWindows.map((h) => ({
+      startTime: h.startTime,
+      endTime: h.endTime,
+    })),
+  ];
+  if (allWindows.length === 0) return [];
 
   const dayStart = startOfJerusalemDay(dateKey);
   const dayEnd = endOfJerusalemDay(dateKey);
@@ -87,7 +106,7 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
   });
 
   const slots = new Set<string>();
-  for (const hours of windows) {
+  for (const hours of allWindows) {
     for (const time of buildSlotsFromWindow({
       dateKey,
       startTime: hours.startTime,

@@ -34,6 +34,7 @@ model Field {
 
   workingHours WorkingHours[]
   dayOffs      DayOff[]
+  extraHours   ExtraHours[]
   bookings     Booking[]
 }
 
@@ -60,6 +61,20 @@ model DayOff {
   field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
   @@unique([fieldId, date])
+  @@index([fieldId])
+}
+
+model ExtraHours {
+  id        String   @id @default(cuid())
+  fieldId   String
+  date      DateTime @db.Date
+  startTime String
+  endTime   String
+  note      String?
+
+  field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@index([fieldId, date])
   @@index([fieldId])
 }
 
