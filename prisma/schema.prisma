@@ -20,6 +20,8 @@ model Field {
   holdMinutes    Int      @default(15)
   /// Platform admin: allows this field to send customer SMS
   smsPlanEnabled Boolean  @default(true)
+  /// Monthly limit for SMS messages this field can send (0 = unlimited).
+  smsMonthlyLimit Int     @default(0)
   /// Owner mobile (optional, for later alerts)
   phone          String?
   /// Public logo URL path (API). When set, replaces the name in the hero.
@@ -34,6 +36,7 @@ model Field {
 
   workingHours WorkingHours[]
   dayOffs      DayOff[]
+  smsUsage     SmsMonthlyUsage[]
   extraHours   ExtraHours[]
   bookings     Booking[]
 }
@@ -76,6 +79,18 @@ model ExtraHours {
 
   @@index([fieldId, date])
   @@index([fieldId])
+}
+
+model SmsMonthlyUsage {
+  id        String   @id @default(cuid())
+  fieldId   String
+  monthKey  String
+  usedCount Int      @default(0)
+
+  field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([fieldId, monthKey])
+  @@index([fieldId, monthKey])
 }
 
 model Booking {

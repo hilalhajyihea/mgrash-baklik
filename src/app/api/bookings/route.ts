@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { createPublicHold } from "@/lib/availability";
 import { buildConfirmUrl } from "@/lib/tokens";
 import { buildHoldConfirmSms, sendSms, sms019Configured } from "@/lib/sms";
+import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
 
 export async function POST(request: Request) {
   try {
@@ -74,8 +75,18 @@ export async function POST(request: Request) {
       );
     }
 
+    const quota = await consumeFieldSmsQuota(field.id);
+    if (!quota.ok) {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: "EXPIRED" },
+      });
+      return NextResponse.json({ error: quota.error }, { status: 429 });
+    }
+
     const sms = await sendSms(booking.customerPhone, smsBody);
     if (!sms.ok) {
+      await refundFieldSmsQuota(field.id, quota.monthKey);
       await prisma.booking.update({
         where: { id: booking.id },
         data: { status: "EXPIRED" },

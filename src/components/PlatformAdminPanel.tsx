@@ -14,6 +14,7 @@ type FieldRow = {
   slotMinutes: number;
   holdMinutes: number;
   smsPlanEnabled: boolean;
+  smsMonthlyLimit: number;
   logoUrl: string | null;
   logoMimeType: string | null;
   introText: string | null;
@@ -148,6 +149,26 @@ export function PlatformAdminPanel() {
     await patchField(field.id, { password: next }, "تم تحديث كلمة المرور");
   }
 
+  async function setSmsMonthlyLimit(field: FieldRow) {
+    const next = prompt(
+      `حد SMS شهري لـ ${field.displayName} (0 = بدون حد)`,
+      String(field.smsMonthlyLimit ?? 0),
+    );
+    if (next == null) return;
+
+    const value = Number(next);
+    if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
+      setError("قيمة غير صالحة للحد الشهري");
+      return;
+    }
+
+    await patchField(
+      field.id,
+      { smsMonthlyLimit: value },
+      "تم تحديث حد SMS الشهري",
+    );
+  }
+
   async function deleteField(field: FieldRow) {
     const ok = confirm(
       `حذف ملعب "${field.displayName}" نهائيًا؟ سيُحذف الموقع والحجوزات ولن يظهر في القائمة.`,
@@ -278,6 +299,9 @@ export function PlatformAdminPanel() {
                   {field.isActive ? "فعّال" : "متوقف"}
                   {" · "}
                   SMS {field.smsPlanEnabled ? "فعّال" : "متوقف"}
+                  {" · "}
+                  حد SMS{" "}
+                  {field.smsMonthlyLimit > 0 ? String(field.smsMonthlyLimit) : "بدون حد"}
                 </p>
               </div>
             </div>
@@ -329,6 +353,13 @@ export function PlatformAdminPanel() {
                 }
               >
                 SMS
+              </button>
+              <button
+                type="button"
+                className="shop-chip rounded-xl px-3 py-1.5 text-sm"
+                onClick={() => setSmsMonthlyLimit(field)}
+              >
+                حد SMS شهري
               </button>
               <button
                 type="button"

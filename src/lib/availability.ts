@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { buildOwnerNewBookingSms, sendSms, sms019Configured } from "@/lib/sms";
+import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
 import { generateConfirmToken } from "@/lib/tokens";
 import {
   combineDateAndTime,
@@ -249,6 +250,7 @@ async function loadBookingByToken(rawToken: string) {
     include: {
       field: {
         select: {
+          id: true,
           displayName: true,
           slug: true,
           phone: true,
@@ -346,14 +348,20 @@ export async function confirmHold(rawToken: string): Promise<ConfirmResult> {
     booking.field.phone &&
     sms019Configured()
   ) {
-    await sendSms(
-      booking.field.phone,
-      buildOwnerNewBookingSms({
-        customerName: booking.customerName,
-        fieldName: booking.field.displayName,
-        startsAt: updated.startsAt,
-      }),
-    );
+    const quota = await consumeFieldSmsQuota(booking.field.id);
+    if (quota.ok) {
+      const sms = await sendSms(
+        booking.field.phone,
+        buildOwnerNewBookingSms({
+          customerName: booking.customerName,
+          fieldName: booking.field.displayName,
+          startsAt: updated.startsAt,
+        }),
+      );
+      if (!sms.ok) {
+        await refundFieldSmsQuota(booking.field.id, quota.monthKey);
+      }
+    }
   }
 
   return {

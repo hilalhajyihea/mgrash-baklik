@@ -21,6 +21,7 @@ export async function GET() {
       slotMinutes: true,
       holdMinutes: true,
       smsPlanEnabled: true,
+      smsMonthlyLimit: true,
       logoUrl: true,
       logoMimeType: true,
       introText: true,
@@ -88,6 +89,7 @@ const patchSchema = z.object({
   id: z.string().min(1),
   isActive: z.boolean().optional(),
   smsPlanEnabled: z.boolean().optional(),
+  smsMonthlyLimit: z.number().int().min(0).optional(),
   password: z.string().min(6).max(100).optional(),
   displayName: z.string().min(2).max(80).optional(),
   introText: z.string().max(500).optional(),
@@ -118,6 +120,9 @@ export async function PATCH(request: Request) {
       ...(parsed.data.smsPlanEnabled !== undefined
         ? { smsPlanEnabled: parsed.data.smsPlanEnabled }
         : {}),
+      ...(parsed.data.smsMonthlyLimit !== undefined
+        ? { smsMonthlyLimit: parsed.data.smsMonthlyLimit }
+        : {}),
       ...(parsed.data.displayName
         ? { displayName: parsed.data.displayName.trim() }
         : {}),
@@ -134,6 +139,7 @@ export async function PATCH(request: Request) {
       displayName: field.displayName,
       isActive: field.isActive,
       smsPlanEnabled: field.smsPlanEnabled,
+      smsMonthlyLimit: field.smsMonthlyLimit,
     },
   });
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { sanitizeToken } from "@/lib/tokens";
 import { expireHolds } from "@/lib/availability";
 import { buildOwnerCancelSms, sendSms, sms019Configured } from "@/lib/sms";
+import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
 
 export async function POST(
   _request: Request,
@@ -19,7 +20,9 @@ export async function POST(
   const booking = await prisma.booking.findUnique({
     where: { confirmToken: token },
     include: {
-      field: { select: { displayName: true, phone: true, smsPlanEnabled: true } },
+      field: {
+        select: { id: true, displayName: true, phone: true, smsPlanEnabled: true },
+      },
     },
   });
   if (!booking) {
@@ -45,14 +48,20 @@ export async function POST(
     booking.field.phone &&
     sms019Configured()
   ) {
-    await sendSms(
-      booking.field.phone,
-      buildOwnerCancelSms({
-        customerName: booking.customerName,
-        fieldName: booking.field.displayName,
-        startsAt: booking.startsAt,
-      }),
-    );
+    const quota = await consumeFieldSmsQuota(booking.field.id);
+    if (quota.ok) {
+      const sms = await sendSms(
+        booking.field.phone,
+        buildOwnerCancelSms({
+          customerName: booking.customerName,
+          fieldName: booking.field.displayName,
+          startsAt: booking.startsAt,
+        }),
+      );
+      if (!sms.ok) {
+        await refundFieldSmsQuota(booking.field.id, quota.monthKey);
+      }
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -7,6 +7,7 @@ import {
   sendSms,
   sms019Configured,
 } from "@/lib/sms";
+import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
 
 const schema = z.object({
   id: z.string().min(1),
@@ -50,14 +51,20 @@ export async function POST(request: Request) {
     booking.customerPhone &&
     sms019Configured()
   ) {
-    await sendSms(
-      booking.customerPhone,
-      buildCustomerCancelledByOwnerSms({
-        customerName: booking.customerName,
-        fieldName: booking.field.displayName,
-        startsAt: booking.startsAt,
-      }),
-    );
+    const quota = await consumeFieldSmsQuota(session.fieldId);
+    if (quota.ok) {
+      const sms = await sendSms(
+        booking.customerPhone,
+        buildCustomerCancelledByOwnerSms({
+          customerName: booking.customerName,
+          fieldName: booking.field.displayName,
+          startsAt: booking.startsAt,
+        }),
+      );
+      if (!sms.ok) {
+        await refundFieldSmsQuota(session.fieldId, quota.monthKey);
+      }
+    }
   }
 
   return NextResponse.json({ ok: true });
