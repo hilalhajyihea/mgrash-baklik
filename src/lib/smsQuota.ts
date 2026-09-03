@@ -84,3 +84,36 @@ export async function refundFieldSmsQuota(fieldId: string, monthKey?: string) {
   });
 }
 
+export type SmsQuotaStatus = {
+  monthKey: string;
+  limit: number; // 0 = unlimited
+  usedCount: number;
+  remaining: number | null; // null = unlimited
+};
+
+export async function getFieldSmsQuotaStatus(
+  fieldId: string,
+): Promise<SmsQuotaStatus> {
+  const field = await prisma.field.findUnique({
+    where: { id: fieldId },
+    select: { smsMonthlyLimit: true },
+  });
+
+  const limit = field?.smsMonthlyLimit ?? 0;
+  const monthKey = getMonthKey();
+
+  if (limit <= 0) {
+    return { monthKey, limit, usedCount: 0, remaining: null };
+  }
+
+  const usage = await prisma.smsMonthlyUsage.findUnique({
+    where: { fieldId_monthKey: { fieldId, monthKey } },
+    select: { usedCount: true },
+  });
+
+  const usedCount = usage?.usedCount ?? 0;
+  const remaining = Math.max(limit - usedCount, 0);
+
+  return { monthKey, limit, usedCount, remaining };
+}
+

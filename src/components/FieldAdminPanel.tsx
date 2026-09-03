@@ -65,6 +65,11 @@ export function FieldAdminPanel({
   const [hours, setHours] = useState<HourWindow[]>(defaultHours());
   const [ownerPhone, setOwnerPhone] = useState("");
   const [smsPlanEnabled, setSmsPlanEnabled] = useState(false);
+  const [smsMonthlyLimit, setSmsMonthlyLimit] = useState<number>(0);
+  const [smsMonthlyUsed, setSmsMonthlyUsed] = useState<number>(0);
+  const [smsMonthlyRemaining, setSmsMonthlyRemaining] = useState<
+    number | null
+  >(null);
   const [dayOffs, setDayOffs] = useState<DayOff[]>([]);
   const [extraHours, setExtraHours] = useState<ExtraHoursRow[]>([]);
   const [extraDate, setExtraDate] = useState("");
@@ -113,6 +118,11 @@ export function FieldAdminPanel({
       setExtraHours(eData.extraHours || []);
       setOwnerPhone(sData.phone || "");
       setSmsPlanEnabled(!!sData.smsPlanEnabled);
+      setSmsMonthlyLimit(Number(sData.smsMonthlyLimit ?? 0));
+      setSmsMonthlyUsed(Number(sData.smsMonthlyUsed ?? 0));
+      setSmsMonthlyRemaining(
+        sData.smsMonthlyRemaining == null ? null : Number(sData.smsMonthlyRemaining),
+      );
     } catch {
       setError("خطأ في التحميل");
     } finally {
@@ -640,6 +650,12 @@ export function FieldAdminPanel({
 
       {tab === "sms" ? (
         <form onSubmit={saveSmsSettings} className="surface-dark mt-6 space-y-4 rounded-2xl p-5">
+          <p className="text-sm text-[rgba(244,248,238,0.62)]">
+            حد SMS شهري:{" "}
+            {smsMonthlyLimit > 0 ? String(smsMonthlyLimit) : "بدون حد"} · المتبقي لهذا الشهر:{" "}
+            {smsMonthlyRemaining == null ? "غير محدود" : String(smsMonthlyRemaining)}
+            {smsMonthlyLimit > 0 ? ` · استخدمت ${smsMonthlyUsed}` : ""}
+          </p>
           <p className="text-sm text-[rgba(244,248,238,0.62)]">
             رقم هاتف صاحب الملعب. عند إلغاء حجز مؤكَّد تُرسل رسالة تنبيه إلى هذا الرقم.
             {smsPlanEnabled ? "" : " خدمة SMS غير مفعّلة لهذا الملعب من الإدارة."}

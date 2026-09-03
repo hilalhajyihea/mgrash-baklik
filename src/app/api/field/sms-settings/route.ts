@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireFieldSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getFieldSmsQuotaStatus } from "@/lib/smsQuota";
 
 export async function GET() {
   const session = await requireFieldSession();
@@ -11,15 +12,20 @@ export async function GET() {
 
   const field = await prisma.field.findUnique({
     where: { id: session.fieldId },
-    select: { phone: true, smsPlanEnabled: true },
+    select: { phone: true, smsPlanEnabled: true, smsMonthlyLimit: true },
   });
   if (!field) {
     return NextResponse.json({ error: "الملعب غير موجود" }, { status: 404 });
   }
 
+  const quota = await getFieldSmsQuotaStatus(session.fieldId);
+
   return NextResponse.json({
     phone: field.phone || "",
     smsPlanEnabled: field.smsPlanEnabled,
+    smsMonthlyLimit: field.smsMonthlyLimit,
+    smsMonthlyUsed: quota.usedCount,
+    smsMonthlyRemaining: quota.remaining,
   });
 }
 
