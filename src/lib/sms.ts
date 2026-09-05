@@ -254,3 +254,18 @@ export function buildBookingReminderSms(input: {
     BRAND,
   ].join("\n");
 }
+
+export function buildCompetitionPrizeSms(input: {
+  winnerName: string;
+  fieldName: string;
+  competitionTitle: string;
+  prizeText: string;
+}): string {
+  return [
+    `مبروك ${input.winnerName}!`,
+    `فزتم في مسابقة «${input.competitionTitle}» في ${input.fieldName}.`,
+    `جائزتكم: ${input.prizeText}`,
+    `سيتواصل معكم مدير الملعب قريبًا.`,
+    BRAND,
+  ].join("\n");
+}

@@ -3,6 +3,12 @@ import { z } from "zod";
 import { requireFieldSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { listFieldCompetitions } from "@/lib/competition";
+import {
+  buildCompetitionPrizeSms,
+  sendSms,
+  sms019Configured,
+} from "@/lib/sms";
+import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
 import { endOfJerusalemDay } from "@/lib/time";
 
 export async function GET() {
@@ -213,10 +219,74 @@ export async function PATCH(request: Request) {
     data.prizeRedeemed = parsed.data.prizeRedeemed;
   }
 
+  const markingRedeemed =
+    parsed.data.prizeRedeemed === true && !existing.prizeRedeemed;
+
   await prisma.competition.update({
     where: { id: existing.id },
     data,
   });
 
+  if (
+    markingRedeemed &&
+    existing.winnerPhone &&
+    existing.winnerName &&
+    sms019Configured()
+  ) {
+    const field = await prisma.field.findUnique({
+      where: { id: session.fieldId },
+      select: { displayName: true, smsPlanEnabled: true },
+    });
+    if (field?.smsPlanEnabled) {
+      const quota = await consumeFieldSmsQuota(session.fieldId);
+      if (quota.ok) {
+        const sms = await sendSms(
+          existing.winnerPhone,
+          buildCompetitionPrizeSms({
+            winnerName: existing.winnerName,
+            fieldName: field.displayName,
+            competitionTitle: existing.title,
+            prizeText: existing.prizeText,
+          }),
+        );
+        if (!sms.ok) {
+          await refundFieldSmsQuota(session.fieldId, quota.monthKey);
+        }
+      }
+    }
+  }
+
   return NextResponse.json({ ok: true });
+}
+
+const deleteSchema = z.object({
+  id: z.string().min(1),
+});
+
+export async function DELETE(request: Request) {
+  const session = await requireFieldSession();
+  if (!session) {
+    return NextResponse.json({ error: "غير مسجّل الدخول" }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const parsed = deleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "معرّف المسابقة ناقص" }, { status: 400 });
+  }
+
+  const existing = await prisma.competition.findFirst({
+    where: { id: parsed.data.id, fieldId: session.fieldId },
+    select: { id: true, title: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "المسابقة غير موجودة" }, { status: 404 });
+  }
+
+  await prisma.competition.delete({ where: { id: existing.id } });
+
+  return NextResponse.json({
+    ok: true,
+    competition: { id: existing.id, title: existing.title },
+  });
 }

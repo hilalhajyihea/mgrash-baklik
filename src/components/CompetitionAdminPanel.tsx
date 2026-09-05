@@ -103,6 +103,29 @@ export function CompetitionAdminPanel({
     load();
   }
 
+  async function deleteCompetition(c: CompetitionRow) {
+    if (
+      !confirm(
+        `حذف مسابقة «${c.title}» نهائيًا؟ ستختفي من الإدارة والصفحة العامة.`,
+      )
+    ) {
+      return;
+    }
+    onError("");
+    const res = await fetch("/api/field/competition", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: c.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      onError(data.error || "فشل الحذف");
+      return;
+    }
+    onMessage(`حُذفت المسابقة: ${c.title}`);
+    load();
+  }
+
   return (
     <div className="mt-6 space-y-4">
       <form onSubmit={createCompetition} className="surface-dark space-y-3 rounded-2xl p-5">
@@ -202,13 +225,22 @@ export function CompetitionAdminPanel({
                   onClick={() =>
                     patch(
                       { id: c.id, prizeRedeemed: !c.prizeRedeemed },
-                      c.prizeRedeemed ? "أُلغيت علامة التسليم" : "سُجّل تسليم الجائزة",
+                      c.prizeRedeemed
+                        ? "أُلغيت علامة التسليم"
+                        : "سُجّل تسليم الجائزة وأُرسل SMS للفائز",
                     )
                   }
                 >
                   {c.prizeRedeemed ? "الجائزة سُلّمت ✓" : "تسليم الجائزة"}
                 </button>
               ) : null}
+              <button
+                type="button"
+                className="shop-chip rounded-xl px-3 py-1.5 text-sm text-red-200"
+                onClick={() => deleteCompetition(c)}
+              >
+                حذف
+              </button>
             </div>
           </div>
 
