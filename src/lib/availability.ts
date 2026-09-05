@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { buildOwnerNewBookingSms, sendSms, sms019Configured } from "@/lib/sms";
 import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
+import {
+  awardCompetitionPointForBooking,
+} from "@/lib/competition";
 import { generateConfirmToken } from "@/lib/tokens";
 import {
   addDaysToDateKey,
@@ -205,7 +208,7 @@ export async function createAdminBooking(input: {
   const startsAt = combineDateAndTime(input.dateKey, slot.startTime);
   const endsAt = windowEndsAt(input.dateKey, slot.startTime, slot.endTime);
 
-  return prisma.$transaction(async (tx) => {
+  const booking = await prisma.$transaction(async (tx) => {
     const overlapping = await tx.booking.findFirst({
       where: {
         fieldId: input.fieldId,
@@ -232,6 +235,17 @@ export async function createAdminBooking(input: {
       },
     });
   });
+
+  if (booking.customerPhone.trim()) {
+    await awardCompetitionPointForBooking({
+      fieldId: input.fieldId,
+      bookingId: booking.id,
+      customerName: booking.customerName,
+      customerPhone: booking.customerPhone,
+    });
+  }
+
+  return booking;
 }
 
 export type HoldPreview =
@@ -351,6 +365,13 @@ export async function confirmHold(rawToken: string): Promise<ConfirmResult> {
   const updated = await prisma.booking.update({
     where: { id: booking.id },
     data: { status: "CONFIRMED", confirmedAt: new Date() },
+  });
+
+  await awardCompetitionPointForBooking({
+    fieldId: booking.field.id,
+    bookingId: booking.id,
+    customerName: booking.customerName,
+    customerPhone: booking.customerPhone,
   });
 
   if (

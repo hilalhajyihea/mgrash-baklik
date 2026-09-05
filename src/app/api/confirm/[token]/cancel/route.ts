@@ -4,6 +4,7 @@ import { sanitizeToken } from "@/lib/tokens";
 import { expireHolds } from "@/lib/availability";
 import { buildOwnerCancelSms, sendSms, sms019Configured } from "@/lib/sms";
 import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
+import { revokeCompetitionPointForBooking } from "@/lib/competition";
 
 export async function POST(
   _request: Request,
@@ -41,6 +42,14 @@ export async function POST(
     where: { id: booking.id },
     data: { status: "CANCELLED" },
   });
+
+  if (wasConfirmed) {
+    await revokeCompetitionPointForBooking({
+      fieldId: booking.field.id,
+      bookingId: booking.id,
+      customerPhone: booking.customerPhone,
+    });
+  }
 
   if (
     wasConfirmed &&

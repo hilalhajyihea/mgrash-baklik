@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BookingCalendar } from "@/components/BookingCalendar";
 import { getPublicBookingDateKeys } from "@/lib/availability";
+import { getCompetitionPublicView } from "@/lib/competition";
 import { prisma } from "@/lib/prisma";
 import { fieldShareMetadata } from "@/lib/seo";
 
@@ -41,6 +42,7 @@ export default async function FieldPublicPage({ params }: Props) {
     ? `/api/fields/${field.slug}/logo`
     : null;
   const dateKeys = await getPublicBookingDateKeys(field.id);
+  const competition = await getCompetitionPublicView(field.id);
 
   return (
     <main className="flex-1">
@@ -50,6 +52,7 @@ export default async function FieldPublicPage({ params }: Props) {
         logoUrl={logoUrl}
         introText={field.introText}
         dateKeys={dateKeys}
+        competition={competition}
       />
     </main>
   );

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandGraphics";
+import { CompetitionBanner } from "@/components/CompetitionBanner";
 import {
   combineDateAndTime,
   formatDateHe,
@@ -16,6 +17,17 @@ type Props = {
   introText?: string | null;
   /** Scheduled dates from today through the owner's last allocated day. */
   dateKeys?: string[];
+  competition?: {
+    id: string;
+    title: string;
+    goalPoints: number;
+    prizeText: string;
+    endsAt: string;
+    status: "ACTIVE" | "PAUSED" | "ENDED";
+    winnerName: string | null;
+    wonAt: string | null;
+    leaderboard: { displayName: string; points: number }[];
+  } | null;
 };
 
 type SlotOption = { startTime: string; endTime: string };
@@ -26,6 +38,7 @@ export function BookingCalendar({
   logoUrl,
   introText,
   dateKeys = [],
+  competition = null,
 }: Props) {
   const dates = useMemo(() => {
     return dateKeys.map((key) => ({
@@ -260,6 +273,8 @@ export function BookingCalendar({
               {submitting ? "جارٍ الحفظ…" : "حفظ الساعة"}
             </button>
           </form>
+
+          {competition ? <CompetitionBanner competition={competition} /> : null}
         </div>
 
         <footer className="mx-auto mt-10 max-w-3xl px-4 pb-2 text-center text-sm text-[rgba(244,248,238,0.62)] sm:px-6">

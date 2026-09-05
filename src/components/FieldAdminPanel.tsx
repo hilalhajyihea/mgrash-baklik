@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandGraphics";
+import { CompetitionAdminPanel } from "@/components/CompetitionAdminPanel";
 import {
   combineDateAndTime,
   dbDateToDateKey,
@@ -48,7 +49,7 @@ export function FieldAdminPanel({
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<
-    "bookings" | "book" | "schedule" | "daysOff" | "sms"
+    "bookings" | "book" | "schedule" | "daysOff" | "competition" | "sms"
   >("bookings");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [ownerPhone, setOwnerPhone] = useState("");
@@ -254,6 +255,7 @@ export function FieldAdminPanel({
     { id: "book" as const, label: "إضافة حجز" },
     { id: "schedule" as const, label: "جدول الساعات" },
     { id: "daysOff" as const, label: "أيام الإغلاق" },
+    { id: "competition" as const, label: "مسابقة" },
     { id: "sms" as const, label: "SMS" },
   ];
 
@@ -507,6 +509,19 @@ export function FieldAdminPanel({
             </div>
           ))}
         </div>
+      ) : null}
+
+      {tab === "competition" ? (
+        <CompetitionAdminPanel
+          onMessage={(msg) => {
+            setError("");
+            setMessage(msg);
+          }}
+          onError={(msg) => {
+            setMessage("");
+            setError(msg);
+          }}
+        />
       ) : null}
 
       {tab === "sms" ? (

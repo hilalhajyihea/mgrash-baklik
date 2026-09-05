@@ -39,6 +39,7 @@ model Field {
   smsUsage     SmsMonthlyUsage[]
   extraHours   ExtraHours[]
   bookings     Booking[]
+  competitions Competition[]
 }
 
 model WorkingHours {
@@ -118,4 +119,61 @@ model Booking {
   @@index([fieldId, status])
   @@index([status, holdExpiresAt])
   @@index([status, reminderSentAt, startsAt])
+}
+
+model Competition {
+  id            String    @id @default(cuid())
+  fieldId       String
+  title         String
+  goalPoints    Int
+  prizeText     String
+  endsAt        DateTime
+  /// DRAFT | ACTIVE | PAUSED | ENDED
+  status        String    @default("DRAFT")
+  winnerPhone   String?
+  winnerName    String?
+  wonAt         DateTime?
+  prizeRedeemed Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  field  Field              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  entries CompetitionEntry[]
+  events  CompetitionEvent[]
+
+  @@index([fieldId, status])
+  @@index([fieldId, endsAt])
+}
+
+model CompetitionEntry {
+  id            String @id @default(cuid())
+  competitionId String
+  /// Normalized phone identity (E.164 preferred)
+  phoneKey      String
+  /// Display name from first booking in this competition
+  displayName   String
+  points        Int    @default(0)
+
+  competition Competition         @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  events      CompetitionEvent[]
+
+  @@unique([competitionId, phoneKey])
+  @@index([competitionId, points])
+}
+
+model CompetitionEvent {
+  id            String   @id @default(cuid())
+  competitionId String
+  entryId       String?
+  bookingId     String?  @unique
+  phoneKey      String
+  delta         Int
+  /// CONFIRM | CANCEL | MANUAL
+  reason        String
+  createdAt     DateTime @default(now())
+
+  competition Competition      @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  entry       CompetitionEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  @@index([competitionId, createdAt])
 }

@@ -8,6 +8,7 @@ import {
   sms019Configured,
 } from "@/lib/sms";
 import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
+import { revokeCompetitionPointForBooking } from "@/lib/competition";
 
 const schema = z.object({
   id: z.string().min(1),
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, already: true });
   }
 
+  const wasConfirmed = booking.status === "CONFIRMED";
   const notifyCustomer =
     booking.status === "CONFIRMED" || booking.status === "HOLD";
 
@@ -44,6 +46,14 @@ export async function POST(request: Request) {
     where: { id: booking.id },
     data: { status: "CANCELLED" },
   });
+
+  if (wasConfirmed) {
+    await revokeCompetitionPointForBooking({
+      fieldId: session.fieldId,
+      bookingId: booking.id,
+      customerPhone: booking.customerPhone,
+    });
+  }
 
   if (
     notifyCustomer &&
