@@ -159,20 +159,20 @@ async function main() {
 
   const field = await prisma.field.upsert({
     where: { slug: "ramat-gan" },
-    update: { passwordHash, displayName: "ملعب رمات جان", slotMinutes: 90 },
+    update: { passwordHash, displayName: "ملعب رمات جان", slotMinutes: 60 },
     create: {
       slug: "ramat-gan",
       displayName: "ملعب رمات جان",
       username: "ramatgan",
       passwordHash,
-      slotMinutes: 90,
+      slotMinutes: 60,
       holdMinutes: 15,
       smsPlanEnabled: true,
     },
   });
 
-  // Enforce 90-minute booking slots for all fields (does not rewrite bookings).
-  await prisma.field.updateMany({ data: { slotMinutes: 90 } });
+  // Bookings keep their own startsAt/endsAt; slotMinutes is unused for windows.
+  await prisma.field.updateMany({ data: { slotMinutes: 60 } });
 
   await migrateWeeklyHoursToDateSchedule();
 

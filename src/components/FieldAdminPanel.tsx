@@ -8,8 +8,8 @@ import {
   combineDateAndTime,
   dbDateToDateKey,
   formatDateHe,
-  formatSlotRange,
   formatTime,
+  formatTimeRange,
   toDateKey,
 } from "@/lib/time";
 
@@ -37,6 +37,8 @@ type ScheduleWindow = {
   note: string | null;
 };
 
+type SlotOption = { startTime: string; endTime: string };
+
 export function FieldAdminPanel({
   slug,
   displayName,
@@ -60,7 +62,7 @@ export function FieldAdminPanel({
   const [schedule, setSchedule] = useState<ScheduleWindow[]>([]);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleStart, setScheduleStart] = useState("18:00");
-  const [scheduleEnd, setScheduleEnd] = useState("21:00");
+  const [scheduleEnd, setScheduleEnd] = useState("19:30");
   const [scheduleNote, setScheduleNote] = useState("");
   const [offDate, setOffDate] = useState("");
   const [offNote, setOffNote] = useState("");
@@ -68,8 +70,7 @@ export function FieldAdminPanel({
   const [bookTime, setBookTime] = useState("");
   const [bookName, setBookName] = useState("");
   const [bookPhone, setBookPhone] = useState("");
-  const [bookSlots, setBookSlots] = useState<string[]>([]);
-  const [slotMinutes, setSlotMinutes] = useState(90);
+  const [bookSlots, setBookSlots] = useState<SlotOption[]>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -122,9 +123,6 @@ export function FieldAdminPanel({
       const data = await res.json();
       if (!cancelled) {
         setBookSlots(data.slots || []);
-        if (typeof data.slotMinutes === "number" && data.slotMinutes > 0) {
-          setSlotMinutes(data.slotMinutes);
-        }
         setBookTime("");
       }
     }
@@ -354,14 +352,14 @@ export function FieldAdminPanel({
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {bookSlots.map((slot) => (
               <button
-                key={slot}
+                key={slot.startTime}
                 type="button"
-                onClick={() => setBookTime(slot)}
+                onClick={() => setBookTime(slot.startTime)}
                 className={`shop-chip rounded-xl px-3 py-2 text-sm ${
-                  bookTime === slot ? "shop-chip-active" : ""
+                  bookTime === slot.startTime ? "shop-chip-active" : ""
                 }`}
               >
-                {formatSlotRange(slot, slotMinutes)}
+                {formatTimeRange(slot.startTime, slot.endTime)}
               </button>
             ))}
           </div>
@@ -392,10 +390,10 @@ export function FieldAdminPanel({
         <div className="mt-6 space-y-4">
           <form onSubmit={addScheduleWindow} className="surface-dark space-y-3 rounded-2xl p-5">
             <p className="text-sm text-[rgba(244,248,238,0.62)]">
-              ابنوا الجدول يومًا بيوم: اختاروا تاريخًا وأضيفوا فترات (مثلاً 18:00–21:00).
-              الزبائن يحجزون بفترات ثابتة {slotMinutes} دقيقة — مثل 18:00–19:30 و19:30–21:00.
-              يمكن إضافة أكثر من فترة في نفس اليوم بدون تداخل، مثل 18:00–19:30 و20:00–21:30.
-              الجدول خاص بكل تاريخ ولا يتكرر للأسبوع التالي تلقائيًا.
+              ابنوا الجدول يومًا بيوم: كل فترة تضيفونها هي حجز واحد للزبائن.
+              مثلاً 18:00–19:30 فترة، و20:00–21:00 فترة أخرى. يمكن إضافة أكثر من
+              فترة في نفس اليوم بدون تداخل. الجدول خاص بكل تاريخ ولا يتكرر
+              للأسبوع التالي تلقائيًا.
             </p>
             <input
               type="date"

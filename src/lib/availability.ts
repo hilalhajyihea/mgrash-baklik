@@ -9,7 +9,6 @@ import {
   dbDateToDateKey,
   endOfJerusalemDay,
   minutesToTime,
-  parseTimeToMinutes,
   parseWindowEndMinutes,
   startOfJerusalemDay,
   toDateKey,
@@ -30,35 +29,28 @@ function blockingStatuses() {
   return ["HOLD", "CONFIRMED"] as const;
 }
 
-function buildSlotsFromWindow(input: {
-  dateKey: string;
+export type AvailableSlot = {
   startTime: string;
   endTime: string;
-  slotMinutes: number;
-  bookings: { startsAt: Date; endsAt: Date }[];
-}) {
-  const startMin = parseTimeToMinutes(input.startTime);
-  const endMin = parseWindowEndMinutes(input.startTime, input.endTime);
-  const now = new Date();
-  const slots: string[] = [];
+};
 
-  for (let t = startMin; t + input.slotMinutes <= endMin; t += input.slotMinutes) {
-    const time = minutesToTime(t);
-    const startsAt = combineDateAndTime(input.dateKey, time);
-    const endsAt = new Date(startsAt.getTime() + input.slotMinutes * 60_000);
-
-    if (startsAt <= now) continue;
-
-    const conflict = input.bookings.some(
-      (a) => startsAt < a.endsAt && endsAt > a.startsAt,
-    );
-    if (!conflict) slots.push(time);
+/** Instant when a schedule window ends (handles 00:00 as end-of-day midnight). */
+export function windowEndsAt(
+  dateKey: string,
+  startTime: string,
+  endTime: string,
+): Date {
+  const endMin = parseWindowEndMinutes(startTime, endTime);
+  if (endMin >= 24 * 60) {
+    return combineDateAndTime(addDaysToDateKey(dateKey, 1), "00:00");
   }
-
-  return slots;
+  return combineDateAndTime(dateKey, minutesToTime(endMin));
 }
 
-export async function getAvailableSlots(fieldId: string, dateKey: string) {
+export async function getAvailableSlots(
+  fieldId: string,
+  dateKey: string,
+): Promise<AvailableSlot[]> {
   await expireHolds();
 
   const field = await prisma.field.findUnique({
@@ -73,7 +65,7 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
   });
   if (dayOff) return [];
 
-  /** Schedule is date-specific only (not a recurring weekly template). */
+  /** Each ExtraHours row is one bookable window (owner-defined length). */
   const dayWindows = await prisma.extraHours.findMany({
     where: {
       fieldId,
@@ -94,21 +86,23 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
     },
   });
 
-  const slotMinutes = field.slotMinutes > 0 ? field.slotMinutes : 90;
+  const now = new Date();
+  const slots: AvailableSlot[] = [];
 
-  const slots = new Set<string>();
   for (const hours of dayWindows) {
-    for (const time of buildSlotsFromWindow({
-      dateKey,
-      startTime: hours.startTime,
-      endTime: hours.endTime,
-      slotMinutes,
-      bookings,
-    })) {
-      slots.add(time);
+    const startsAt = combineDateAndTime(dateKey, hours.startTime);
+    const endsAt = windowEndsAt(dateKey, hours.startTime, hours.endTime);
+    if (startsAt <= now) continue;
+
+    const conflict = bookings.some(
+      (a) => startsAt < a.endsAt && endsAt > a.startsAt,
+    );
+    if (!conflict) {
+      slots.push({ startTime: hours.startTime, endTime: hours.endTime });
     }
   }
-  return Array.from(slots).sort();
+
+  return slots;
 }
 
 /**
@@ -150,12 +144,13 @@ export async function createPublicHold(input: {
   }
 
   const slots = await getAvailableSlots(input.fieldId, input.dateKey);
-  if (!slots.includes(input.time)) {
+  const slot = slots.find((s) => s.startTime === input.time);
+  if (!slot) {
     throw new Error("الساعة غير متاحة");
   }
 
-  const startsAt = combineDateAndTime(input.dateKey, input.time);
-  const endsAt = new Date(startsAt.getTime() + field.slotMinutes * 60_000);
+  const startsAt = combineDateAndTime(input.dateKey, slot.startTime);
+  const endsAt = windowEndsAt(input.dateKey, slot.startTime, slot.endTime);
   const holdExpiresAt = new Date(Date.now() + field.holdMinutes * 60_000);
 
   return prisma.$transaction(async (tx) => {
@@ -202,12 +197,13 @@ export async function createAdminBooking(input: {
   }
 
   const slots = await getAvailableSlots(input.fieldId, input.dateKey);
-  if (!slots.includes(input.time)) {
+  const slot = slots.find((s) => s.startTime === input.time);
+  if (!slot) {
     throw new Error("الساعة غير متاحة");
   }
 
-  const startsAt = combineDateAndTime(input.dateKey, input.time);
-  const endsAt = new Date(startsAt.getTime() + field.slotMinutes * 60_000);
+  const startsAt = combineDateAndTime(input.dateKey, slot.startTime);
+  const endsAt = windowEndsAt(input.dateKey, slot.startTime, slot.endTime);
 
   return prisma.$transaction(async (tx) => {
     const overlapping = await tx.booking.findFirst({

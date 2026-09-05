@@ -6,7 +6,7 @@ import { BrandMark } from "@/components/BrandGraphics";
 import {
   combineDateAndTime,
   formatDateHe,
-  formatSlotRange,
+  formatTimeRange,
 } from "@/lib/time";
 
 type Props = {
@@ -17,6 +17,8 @@ type Props = {
   /** Scheduled dates from today through the owner's last allocated day. */
   dateKeys?: string[];
 };
+
+type SlotOption = { startTime: string; endTime: string };
 
 export function BookingCalendar({
   slug,
@@ -33,8 +35,7 @@ export function BookingCalendar({
   }, [dateKeys]);
 
   const [date, setDate] = useState(dates[0]?.key || "");
-  const [slots, setSlots] = useState<string[]>([]);
-  const [slotMinutes, setSlotMinutes] = useState(90);
+  const [slots, setSlots] = useState<SlotOption[]>([]);
   const [time, setTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -63,12 +64,7 @@ export function BookingCalendar({
         const params = new URLSearchParams({ slug, date });
         const res = await fetch(`/api/availability?${params.toString()}`);
         const data = await res.json();
-        if (!cancelled) {
-          setSlots(data.slots || []);
-          if (typeof data.slotMinutes === "number" && data.slotMinutes > 0) {
-            setSlotMinutes(data.slotMinutes);
-          }
-        }
+        if (!cancelled) setSlots(data.slots || []);
       } catch {
         if (!cancelled) setSlots([]);
       } finally {
@@ -87,6 +83,7 @@ export function BookingCalendar({
     setSuccess("");
     setSubmitting(true);
     try {
+      const selected = slots.find((s) => s.startTime === time);
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,8 +101,11 @@ export function BookingCalendar({
         return;
       }
 
+      const rangeLabel = selected
+        ? formatTimeRange(selected.startTime, selected.endTime)
+        : time;
       setSuccess(
-        `أُرسلت إليكم رسالة SMS. اضغطوا على الرابط خلال 15 دقيقة لتأكيد ${formatDateHe(combineDateAndTime(date, "12:00"))} ${formatSlotRange(time, slotMinutes)}. بدون تأكيد تُحرَّر الساعة.`,
+        `أُرسلت إليكم رسالة SMS. اضغطوا على الرابط خلال 15 دقيقة لتأكيد ${formatDateHe(combineDateAndTime(date, "12:00"))} ${rangeLabel}. بدون تأكيد تُحرَّر الساعة.`,
       );
       setName("");
       setPhone("");
@@ -208,14 +208,14 @@ export function BookingCalendar({
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {slots.map((slot) => (
                   <button
-                    key={slot}
+                    key={slot.startTime}
                     type="button"
-                    onClick={() => setTime(slot)}
+                    onClick={() => setTime(slot.startTime)}
                     className={`shop-chip rounded-xl px-3 py-2 text-sm ${
-                      time === slot ? "shop-chip-active" : ""
+                      time === slot.startTime ? "shop-chip-active" : ""
                     }`}
                   >
-                    {formatSlotRange(slot, slotMinutes)}
+                    {formatTimeRange(slot.startTime, slot.endTime)}
                   </button>
                 ))}
               </div>

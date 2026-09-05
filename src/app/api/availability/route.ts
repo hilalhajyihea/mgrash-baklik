@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     }
 
     const slots = await getAvailableSlots(field.id, parsed.data.date);
-    return NextResponse.json({ slots, slotMinutes: field.slotMinutes });
+    return NextResponse.json({ slots });
   } catch (error) {
     console.error("availability error", error);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });

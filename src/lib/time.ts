@@ -36,7 +36,12 @@ export function minutesToTime(total: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/** Display a booking slot start as "18:00–19:30" for the given length. */
+/** Display a booking window as "18:00–19:30". */
+export function formatTimeRange(startTime: string, endTime: string): string {
+  return `${startTime}–${endTime}`;
+}
+
+/** @deprecated Prefer formatTimeRange for owner-defined windows. */
 export function formatSlotRange(startTime: string, slotMinutes: number): string {
   const end = minutesToTime(parseTimeToMinutes(startTime) + slotMinutes);
   return `${startTime}–${end}`;

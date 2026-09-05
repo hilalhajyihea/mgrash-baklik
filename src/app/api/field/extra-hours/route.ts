@@ -74,22 +74,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const field = await prisma.field.findUnique({
-    where: { id: session.fieldId },
-    select: { slotMinutes: true },
-  });
-  const slotMinutes = field?.slotMinutes && field.slotMinutes > 0 ? field.slotMinutes : 90;
-  const windowLength =
-    parseWindowEndMinutes(startTime, endTime) - toMinutes(startTime);
-  if (windowLength < slotMinutes) {
-    return NextResponse.json(
-      {
-        error: `الفترة قصيرة جدًا. الحد الأدنى ${slotMinutes} دقيقة لحجز واحد.`,
-      },
-      { status: 400 },
-    );
-  }
-
   const dbDate = dateKeyToDbDate(date);
 
   const existing = await prisma.extraHours.findMany({

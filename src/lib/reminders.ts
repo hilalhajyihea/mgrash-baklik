@@ -26,7 +26,6 @@ export async function sendDueBookingReminders(now = new Date()) {
         select: {
           id: true,
           displayName: true,
-          slotMinutes: true,
         },
       },
     },
@@ -45,13 +44,11 @@ export async function sendDueBookingReminders(now = new Date()) {
       continue;
     }
 
-    const slotMinutes =
-      booking.field.slotMinutes > 0 ? booking.field.slotMinutes : 90;
     const body = buildBookingReminderSms({
       customerName: booking.customerName,
       fieldName: booking.field.displayName,
       startsAt: booking.startsAt,
-      slotMinutes,
+      endsAt: booking.endsAt,
     });
 
     const sms = await sendSms(booking.customerPhone, body);

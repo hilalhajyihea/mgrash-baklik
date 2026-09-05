@@ -42,7 +42,7 @@ export async function createField(input: {
       displayName: input.displayName.trim(),
       username: input.username.trim(),
       passwordHash,
-      slotMinutes: input.slotMinutes ?? 90,
+      slotMinutes: input.slotMinutes ?? 60,
       holdMinutes: 15,
       smsPlanEnabled: true,
     },

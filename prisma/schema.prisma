@@ -14,8 +14,8 @@ model Field {
   username       String   @unique
   passwordHash   String
   isActive       Boolean  @default(true)
-  /// Rental slot length in minutes (booking windows shown to customers)
-  slotMinutes    Int      @default(90)
+  /// Legacy field — booking length now comes from each schedule window.
+  slotMinutes    Int      @default(60)
   /// How long a public hold waits for SMS confirmation
   holdMinutes    Int      @default(15)
   /// Platform admin: allows this field to send customer SMS
