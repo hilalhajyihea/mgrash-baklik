@@ -5,8 +5,9 @@ import { hash } from "bcryptjs";
 const prisma = new PrismaClient();
 
 const TIMEZONE = "Asia/Jerusalem";
-/** How many days ahead to materialize weekly hours into date windows. */
-const MIGRATE_DAYS_AHEAD = 60;
+/** Copy weekly hours into date windows only through this date (inclusive). */
+const MIGRATE_UNTIL_DATE_KEY = "2026-09-12";
+const MIGRATION_NOTE = "منقول من جدول الأسبوع";
 
 function getZonedParts(date: Date) {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -64,9 +65,9 @@ function dayOfWeekFromDateKey(dateKey: string) {
 }
 
 /**
- * One-time-ish: copy weekly WorkingHours into ExtraHours for the next N days
- * so availability continues after switching to date-based schedules.
- * Never touches Booking rows.
+ * Copy weekly WorkingHours into ExtraHours from today through MIGRATE_UNTIL_DATE_KEY.
+ * Never touches Booking rows. Also removes auto-migrated windows after that date
+ * (from a previous longer migration), so owners add later dates themselves.
  */
 async function migrateWeeklyHoursToDateSchedule() {
   const fields = await prisma.field.findMany({
@@ -78,8 +79,20 @@ async function migrateWeeklyHoursToDateSchedule() {
   });
 
   let created = 0;
+  let removedAfterCutoff = 0;
+  const cutoffDbDate = dateKeyToDbDate(MIGRATE_UNTIL_DATE_KEY);
 
   for (const field of fields) {
+    // Clean auto-copied windows after the cutoff (owner will add those later).
+    const deleted = await prisma.extraHours.deleteMany({
+      where: {
+        fieldId: field.id,
+        date: { gt: cutoffDbDate },
+        note: MIGRATION_NOTE,
+      },
+    });
+    removedAfterCutoff += deleted.count;
+
     if (field.workingHours.length === 0) continue;
 
     const byDow = new Map<number, { startTime: string; endTime: string }[]>();
@@ -90,8 +103,11 @@ async function migrateWeeklyHoursToDateSchedule() {
     }
 
     const todayKey = toDateKey();
-    for (let i = 0; i < MIGRATE_DAYS_AHEAD; i++) {
-      const dateKey = addDaysToDateKey(todayKey, i);
+    for (
+      let dateKey = todayKey;
+      dateKey <= MIGRATE_UNTIL_DATE_KEY;
+      dateKey = addDaysToDateKey(dateKey, 1)
+    ) {
       const dbDate = dateKeyToDbDate(dateKey);
       const dow = dayOfWeekFromDateKey(dateKey);
       const windows = byDow.get(dow) || [];
@@ -114,18 +130,21 @@ async function migrateWeeklyHoursToDateSchedule() {
           date: dbDate,
           startTime: w.startTime,
           endTime: w.endTime,
-          note: "منقول من جدول الأسبوع",
+          note: MIGRATION_NOTE,
         })),
       });
       created += windows.length;
     }
 
     console.log(
-      `Migrated weekly hours → date schedule for /${field.slug} (${MIGRATE_DAYS_AHEAD} days ahead)`,
+      `Migrated weekly hours → date schedule for /${field.slug} (through ${MIGRATE_UNTIL_DATE_KEY})`,
     );
   }
 
   console.log(`Date windows created from weekly hours: ${created}`);
+  console.log(
+    `Auto-migrated windows removed after ${MIGRATE_UNTIL_DATE_KEY}: ${removedAfterCutoff}`,
+  );
 }
 
 async function main() {
