@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BookingCalendar } from "@/components/BookingCalendar";
+import { getPublicBookingDateKeys } from "@/lib/availability";
 import { prisma } from "@/lib/prisma";
 import { fieldShareMetadata } from "@/lib/seo";
 
@@ -26,6 +27,7 @@ export default async function FieldPublicPage({ params }: Props) {
   const field = await prisma.field.findUnique({
     where: { slug },
     select: {
+      id: true,
       slug: true,
       displayName: true,
       isActive: true,
@@ -38,6 +40,7 @@ export default async function FieldPublicPage({ params }: Props) {
   const logoUrl = field.logoMimeType
     ? `/api/fields/${field.slug}/logo`
     : null;
+  const dateKeys = await getPublicBookingDateKeys(field.id);
 
   return (
     <main className="flex-1">
@@ -46,6 +49,7 @@ export default async function FieldPublicPage({ params }: Props) {
         displayName={field.displayName}
         logoUrl={logoUrl}
         introText={field.introText}
+        dateKeys={dateKeys}
       />
     </main>
   );

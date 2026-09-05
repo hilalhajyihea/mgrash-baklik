@@ -7,7 +7,6 @@ import {
   combineDateAndTime,
   formatDateHe,
   formatSlotRange,
-  toDateKey,
 } from "@/lib/time";
 
 type Props = {
@@ -15,20 +14,23 @@ type Props = {
   displayName: string;
   logoUrl?: string | null;
   introText?: string | null;
+  /** Scheduled dates from today through the owner's last allocated day. */
+  dateKeys?: string[];
 };
 
-export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props) {
+export function BookingCalendar({
+  slug,
+  displayName,
+  logoUrl,
+  introText,
+  dateKeys = [],
+}: Props) {
   const dates = useMemo(() => {
-    const list: { key: string; label: string }[] = [];
-    const todayKey = toDateKey();
-    for (let i = 0; i < 14; i++) {
-      const noon = combineDateAndTime(todayKey, "12:00");
-      const d = new Date(noon.getTime() + i * 24 * 60 * 60 * 1000);
-      const key = toDateKey(d);
-      list.push({ key, label: formatDateHe(d) });
-    }
-    return list;
-  }, []);
+    return dateKeys.map((key) => ({
+      key,
+      label: formatDateHe(combineDateAndTime(key, "12:00")),
+    }));
+  }, [dateKeys]);
 
   const [date, setDate] = useState(dates[0]?.key || "");
   const [slots, setSlots] = useState<string[]>([]);
@@ -40,6 +42,16 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (dates.length === 0) {
+      setDate("");
+      return;
+    }
+    if (!dates.some((d) => d.key === date)) {
+      setDate(dates[0]!.key);
+    }
+  }, [dates, date]);
 
   useEffect(() => {
     let cancelled = false;
@@ -160,23 +172,33 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
             className="surface-dark animate-fade-up rounded-2xl p-5 sm:p-7"
           >
             <h2 className="text-lg font-semibold text-[var(--cream)]">التاريخ</h2>
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {dates.map((d) => (
-                <button
-                  key={d.key}
-                  type="button"
-                  onClick={() => setDate(d.key)}
-                  className={`shop-chip shrink-0 rounded-xl px-3 py-2 text-sm ${
-                    date === d.key ? "shop-chip-active" : ""
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
+            {dates.length === 0 ? (
+              <p className="mt-3 text-sm text-[rgba(244,248,238,0.62)]">
+                لا توجد تواريخ مفتوحة للحجز حاليًا.
+              </p>
+            ) : (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {dates.map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => setDate(d.key)}
+                    className={`shop-chip shrink-0 rounded-xl px-3 py-2 text-sm ${
+                      date === d.key ? "shop-chip-active" : ""
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <h2 className="mt-6 text-lg font-semibold text-[var(--cream)]">الساعة</h2>
-            {loadingSlots ? (
+            {dates.length === 0 ? (
+              <p className="mt-3 text-sm text-[rgba(244,248,238,0.62)]">
+                انتظروا فتح الجدول من إدارة الملعب.
+              </p>
+            ) : loadingSlots ? (
               <p className="mt-3 text-sm text-[rgba(244,248,238,0.62)]">جارٍ تحميل الساعات…</p>
             ) : slots.length === 0 ? (
               <p className="mt-3 text-sm text-[rgba(244,248,238,0.62)]">

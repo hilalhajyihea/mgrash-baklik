@@ -5,11 +5,13 @@ import { generateConfirmToken } from "@/lib/tokens";
 import {
   combineDateAndTime,
   dateKeyToDbDate,
+  dbDateToDateKey,
   endOfJerusalemDay,
   minutesToTime,
   parseTimeToMinutes,
   parseWindowEndMinutes,
   startOfJerusalemDay,
+  toDateKey,
 } from "@/lib/time";
 
 export async function expireHolds(now = new Date()) {
@@ -106,6 +108,24 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
     }
   }
   return Array.from(slots).sort();
+}
+
+/**
+ * Public calendar dates: every day the owner scheduled from today onward.
+ * Fully booked days still appear; the last chip is the last allocated date.
+ */
+export async function getPublicBookingDateKeys(fieldId: string): Promise<string[]> {
+  const todayKey = toDateKey();
+  const from = dateKeyToDbDate(todayKey);
+
+  const rows = await prisma.extraHours.findMany({
+    where: { fieldId, date: { gte: from } },
+    select: { date: true },
+    distinct: ["date"],
+    orderBy: { date: "asc" },
+  });
+
+  return rows.map((row) => dbDateToDateKey(row.date));
 }
 
 export async function createPublicHold(input: {
