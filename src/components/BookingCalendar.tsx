@@ -3,7 +3,12 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandGraphics";
-import { combineDateAndTime, formatDateHe, toDateKey } from "@/lib/time";
+import {
+  combineDateAndTime,
+  formatDateHe,
+  formatSlotRange,
+  toDateKey,
+} from "@/lib/time";
 
 type Props = {
   slug: string;
@@ -27,6 +32,7 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
 
   const [date, setDate] = useState(dates[0]?.key || "");
   const [slots, setSlots] = useState<string[]>([]);
+  const [slotMinutes, setSlotMinutes] = useState(90);
   const [time, setTime] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -45,7 +51,12 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
         const params = new URLSearchParams({ slug, date });
         const res = await fetch(`/api/availability?${params.toString()}`);
         const data = await res.json();
-        if (!cancelled) setSlots(data.slots || []);
+        if (!cancelled) {
+          setSlots(data.slots || []);
+          if (typeof data.slotMinutes === "number" && data.slotMinutes > 0) {
+            setSlotMinutes(data.slotMinutes);
+          }
+        }
       } catch {
         if (!cancelled) setSlots([]);
       } finally {
@@ -82,7 +93,7 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
       }
 
       setSuccess(
-        `أُرسلت إليكم رسالة SMS. اضغطوا على الرابط خلال 15 دقيقة لتأكيد ${formatDateHe(combineDateAndTime(date, "12:00"))} الساعة ${time}. بدون تأكيد تُحرَّر الساعة.`,
+        `أُرسلت إليكم رسالة SMS. اضغطوا على الرابط خلال 15 دقيقة لتأكيد ${formatDateHe(combineDateAndTime(date, "12:00"))} ${formatSlotRange(time, slotMinutes)}. بدون تأكيد تُحرَّر الساعة.`,
       );
       setName("");
       setPhone("");
@@ -172,7 +183,7 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
                 لا توجد ساعات متاحة في هذا اليوم.
               </p>
             ) : (
-              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {slots.map((slot) => (
                   <button
                     key={slot}
@@ -182,7 +193,7 @@ export function BookingCalendar({ slug, displayName, logoUrl, introText }: Props
                       time === slot ? "shop-chip-active" : ""
                     }`}
                   >
-                    {slot}
+                    {formatSlotRange(slot, slotMinutes)}
                   </button>
                 ))}
               </div>

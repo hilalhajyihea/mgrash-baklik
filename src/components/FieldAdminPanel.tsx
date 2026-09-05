@@ -7,8 +7,8 @@ import { BrandMark } from "@/components/BrandGraphics";
 import {
   combineDateAndTime,
   dbDateToDateKey,
-  dayName,
   formatDateHe,
+  formatSlotRange,
   formatTime,
   toDateKey,
 } from "@/lib/time";
@@ -23,32 +23,19 @@ type Booking = {
   source: string;
 };
 
-type HourWindow = {
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-};
-
 type DayOff = {
   id: string;
   date: string;
   note: string | null;
 };
 
-type ExtraHoursRow = {
+type ScheduleWindow = {
   id: string;
   date: string;
   startTime: string;
   endTime: string;
   note: string | null;
 };
-
-const defaultHours = (): HourWindow[] =>
-  Array.from({ length: 7 }, (_, dayOfWeek) => ({
-    dayOfWeek,
-    startTime: dayOfWeek === 6 ? "08:00" : "16:00",
-    endTime: dayOfWeek === 5 ? "22:00" : dayOfWeek === 6 ? "22:00" : "23:00",
-  }));
 
 export function FieldAdminPanel({
   slug,
@@ -59,10 +46,9 @@ export function FieldAdminPanel({
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<
-    "bookings" | "book" | "hours" | "extraHours" | "daysOff" | "sms"
+    "bookings" | "book" | "schedule" | "daysOff" | "sms"
   >("bookings");
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [hours, setHours] = useState<HourWindow[]>(defaultHours());
   const [ownerPhone, setOwnerPhone] = useState("");
   const [smsPlanEnabled, setSmsPlanEnabled] = useState(false);
   const [smsMonthlyLimit, setSmsMonthlyLimit] = useState<number>(0);
@@ -71,11 +57,11 @@ export function FieldAdminPanel({
     number | null
   >(null);
   const [dayOffs, setDayOffs] = useState<DayOff[]>([]);
-  const [extraHours, setExtraHours] = useState<ExtraHoursRow[]>([]);
-  const [extraDate, setExtraDate] = useState("");
-  const [extraStart, setExtraStart] = useState("15:00");
-  const [extraEnd, setExtraEnd] = useState("16:30");
-  const [extraNote, setExtraNote] = useState("");
+  const [schedule, setSchedule] = useState<ScheduleWindow[]>([]);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleStart, setScheduleStart] = useState("18:00");
+  const [scheduleEnd, setScheduleEnd] = useState("21:00");
+  const [scheduleNote, setScheduleNote] = useState("");
   const [offDate, setOffDate] = useState("");
   const [offNote, setOffNote] = useState("");
   const [bookDate, setBookDate] = useState(toDateKey());
@@ -83,6 +69,7 @@ export function FieldAdminPanel({
   const [bookName, setBookName] = useState("");
   const [bookPhone, setBookPhone] = useState("");
   const [bookSlots, setBookSlots] = useState<string[]>([]);
+  const [slotMinutes, setSlotMinutes] = useState(90);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -90,9 +77,8 @@ export function FieldAdminPanel({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [bRes, hRes, dRes, eRes, sRes] = await Promise.all([
+      const [bRes, dRes, eRes, sRes] = await Promise.all([
         fetch("/api/field/bookings"),
-        fetch("/api/field/hours"),
         fetch("/api/field/days-off"),
         fetch("/api/field/extra-hours"),
         fetch("/api/field/sms-settings"),
@@ -102,20 +88,12 @@ export function FieldAdminPanel({
         return;
       }
       const bData = await bRes.json();
-      const hData = await hRes.json();
       const dData = await dRes.json();
       const eData = await eRes.json();
       const sData = await sRes.json();
       setBookings(bData.bookings || []);
-      setHours(
-        (hData.hours || []).map((row: HourWindow) => ({
-          dayOfWeek: row.dayOfWeek,
-          startTime: row.startTime,
-          endTime: row.endTime,
-        })),
-      );
       setDayOffs(dData.dayOffs || []);
-      setExtraHours(eData.extraHours || []);
+      setSchedule(eData.extraHours || []);
       setOwnerPhone(sData.phone || "");
       setSmsPlanEnabled(!!sData.smsPlanEnabled);
       setSmsMonthlyLimit(Number(sData.smsMonthlyLimit ?? 0));
@@ -144,6 +122,9 @@ export function FieldAdminPanel({
       const data = await res.json();
       if (!cancelled) {
         setBookSlots(data.slots || []);
+        if (typeof data.slotMinutes === "number" && data.slotMinutes > 0) {
+          setSlotMinutes(data.slotMinutes);
+        }
         setBookTime("");
       }
     }
@@ -156,22 +137,6 @@ export function FieldAdminPanel({
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push(`/${slug}/login`);
-  }
-
-  async function saveHours(e: FormEvent) {
-    e.preventDefault();
-    setError("");
-    const res = await fetch("/api/field/hours", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ hours }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || "فشل حفظ الساعات");
-      return;
-    }
-    setMessage("تم حفظ ساعات التأجير");
   }
 
   async function saveSmsSettings(e: FormEvent) {
@@ -191,52 +156,17 @@ export function FieldAdminPanel({
     setMessage("تم حفظ رقم التنبيه");
   }
 
-  function addHourWindow(dayOfWeek: number) {
-    setHours((rows) => [
-      ...rows,
-      { dayOfWeek, startTime: "16:00", endTime: "17:00" },
-    ]);
-  }
-
-  function removeHourWindow(dayOfWeek: number, indexInDay: number) {
-    setHours((rows) => {
-      let seen = 0;
-      return rows.filter((row) => {
-        if (row.dayOfWeek !== dayOfWeek) return true;
-        const keep = seen !== indexInDay;
-        seen += 1;
-        return keep;
-      });
-    });
-  }
-
-  function updateHourWindow(
-    dayOfWeek: number,
-    indexInDay: number,
-    patch: Partial<Pick<HourWindow, "startTime" | "endTime">>,
-  ) {
-    setHours((rows) => {
-      let seen = 0;
-      return rows.map((row) => {
-        if (row.dayOfWeek !== dayOfWeek) return row;
-        const current = seen;
-        seen += 1;
-        return current === indexInDay ? { ...row, ...patch } : row;
-      });
-    });
-  }
-
-  async function addExtraHours(e: FormEvent) {
+  async function addScheduleWindow(e: FormEvent) {
     e.preventDefault();
     setError("");
     const res = await fetch("/api/field/extra-hours", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        date: extraDate,
-        startTime: extraStart,
-        endTime: extraEnd,
-        note: extraNote,
+        date: scheduleDate,
+        startTime: scheduleStart,
+        endTime: scheduleEnd,
+        note: scheduleNote,
       }),
     });
     const data = await res.json();
@@ -244,13 +174,13 @@ export function FieldAdminPanel({
       setError(data.error || "فشل إضافة الفترة");
       return;
     }
-    setExtraDate("");
-    setExtraNote("");
-    setMessage("أُضيفت فترة لمرة واحدة");
+    setScheduleDate("");
+    setScheduleNote("");
+    setMessage("أُضيفت الفترة إلى الجدول");
     load();
   }
 
-  async function removeExtraHours(id: string) {
+  async function removeScheduleWindow(id: string) {
     await fetch("/api/field/extra-hours", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -324,8 +254,7 @@ export function FieldAdminPanel({
   const tabs = [
     { id: "bookings" as const, label: "حجوزات" },
     { id: "book" as const, label: "إضافة حجز" },
-    { id: "hours" as const, label: "ساعات التأجير" },
-    { id: "extraHours" as const, label: "فترات لمرة واحدة" },
+    { id: "schedule" as const, label: "جدول الساعات" },
     { id: "daysOff" as const, label: "أيام الإغلاق" },
     { id: "sms" as const, label: "SMS" },
   ];
@@ -422,7 +351,7 @@ export function FieldAdminPanel({
             onChange={(e) => setBookDate(e.target.value)}
             required
           />
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {bookSlots.map((slot) => (
               <button
                 key={slot}
@@ -432,7 +361,7 @@ export function FieldAdminPanel({
                   bookTime === slot ? "shop-chip-active" : ""
                 }`}
               >
-                {slot}
+                {formatSlotRange(slot, slotMinutes)}
               </button>
             ))}
           </div>
@@ -459,88 +388,20 @@ export function FieldAdminPanel({
         </form>
       ) : null}
 
-      {tab === "hours" ? (
-        <form onSubmit={saveHours} className="surface-dark mt-6 space-y-5 rounded-2xl p-5">
-          <p className="text-sm text-[rgba(244,248,238,0.62)]">
-            يمكن إضافة أكثر من فترة في نفس اليوم، مثل 14:00–15:30 و22:00–23:30.
-            لإنهاء الفترة عند منتصف الليل اكتبوا 23:00 حتى 00:00.
-          </p>
-          {Array.from({ length: 7 }, (_, dayOfWeek) => {
-            const windows = hours.filter((h) => h.dayOfWeek === dayOfWeek);
-            return (
-              <div key={dayOfWeek} className="border-b border-white/10 pb-4 last:border-0">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="font-semibold">{dayName(dayOfWeek)}</p>
-                  <button
-                    type="button"
-                    className="shop-chip rounded-xl px-3 py-1.5 text-sm"
-                    onClick={() => addHourWindow(dayOfWeek)}
-                  >
-                    إضافة فترة
-                  </button>
-                </div>
-                {windows.length === 0 ? (
-                  <p className="text-sm text-[rgba(244,248,238,0.5)]">مغلق</p>
-                ) : (
-                  <div className="space-y-2">
-                    {windows.map((h, indexInDay) => (
-                      <div
-                        key={`${dayOfWeek}-${indexInDay}`}
-                        className="grid grid-cols-[1fr_1fr_auto] items-center gap-2"
-                      >
-                        <input
-                          type="time"
-                          className="shop-field rounded-xl px-2 py-2"
-                          value={h.startTime}
-                          onChange={(e) =>
-                            updateHourWindow(dayOfWeek, indexInDay, {
-                              startTime: e.target.value,
-                            })
-                          }
-                        />
-                        <input
-                          type="time"
-                          className="shop-field rounded-xl px-2 py-2"
-                          value={h.endTime}
-                          onChange={(e) =>
-                            updateHourWindow(dayOfWeek, indexInDay, {
-                              endTime: e.target.value,
-                            })
-                          }
-                        />
-                        <button
-                          type="button"
-                          className="shop-chip rounded-xl px-3 py-2 text-sm"
-                          onClick={() => removeHourWindow(dayOfWeek, indexInDay)}
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <button type="submit" className="btn-primary w-full rounded-xl py-3 font-semibold">
-            حفظ الساعات
-          </button>
-        </form>
-      ) : null}
-
-      {tab === "extraHours" ? (
+      {tab === "schedule" ? (
         <div className="mt-6 space-y-4">
-          <form onSubmit={addExtraHours} className="surface-dark space-y-3 rounded-2xl p-5">
+          <form onSubmit={addScheduleWindow} className="surface-dark space-y-3 rounded-2xl p-5">
             <p className="text-sm text-[rgba(244,248,238,0.62)]">
-              أضيفوا ساعات تأجير لتاريخ محدّد، بالإضافة إلى جدول الأسبوع. مثلاً
-              يوم عطلة عندكم إيقاف لكن في تاريخ معيّن الملعب متاح من 15:00 حتى
-              16:30.
+              ابنوا الجدول يومًا بيوم: اختاروا تاريخًا وأضيفوا فترات (مثلاً 18:00–21:00).
+              الزبائن يحجزون بفترات ثابتة {slotMinutes} دقيقة — مثل 18:00–19:30 و19:30–21:00.
+              يمكن إضافة أكثر من فترة في نفس اليوم بدون تداخل، مثل 18:00–19:30 و20:00–21:30.
+              الجدول خاص بكل تاريخ ولا يتكرر للأسبوع التالي تلقائيًا.
             </p>
             <input
               type="date"
               className="shop-field w-full rounded-xl px-3 py-2.5"
-              value={extraDate}
-              onChange={(e) => setExtraDate(e.target.value)}
+              value={scheduleDate}
+              onChange={(e) => setScheduleDate(e.target.value)}
               required
             />
             <div className="grid grid-cols-2 gap-2">
@@ -549,8 +410,8 @@ export function FieldAdminPanel({
                 <input
                   type="time"
                   className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
-                  value={extraStart}
-                  onChange={(e) => setExtraStart(e.target.value)}
+                  value={scheduleStart}
+                  onChange={(e) => setScheduleStart(e.target.value)}
                   required
                 />
               </label>
@@ -559,8 +420,8 @@ export function FieldAdminPanel({
                 <input
                   type="time"
                   className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
-                  value={extraEnd}
-                  onChange={(e) => setExtraEnd(e.target.value)}
+                  value={scheduleEnd}
+                  onChange={(e) => setScheduleEnd(e.target.value)}
                   required
                 />
               </label>
@@ -568,17 +429,19 @@ export function FieldAdminPanel({
             <input
               className="shop-field w-full rounded-xl px-3 py-2.5"
               placeholder="ملاحظة (اختياري)"
-              value={extraNote}
-              onChange={(e) => setExtraNote(e.target.value)}
+              value={scheduleNote}
+              onChange={(e) => setScheduleNote(e.target.value)}
             />
             <button type="submit" className="btn-primary w-full rounded-xl py-3 font-semibold">
               إضافة فترة
             </button>
           </form>
-          {extraHours.length === 0 ? (
-            <p className="text-sm text-[rgba(244,248,238,0.62)]">لا فترات إضافية قادمة.</p>
+          {schedule.length === 0 ? (
+            <p className="text-sm text-[rgba(244,248,238,0.62)]">
+              لا فترات في الجدول بعد. أضيفوا تواريخًا ليظهر الحجز للزبائن.
+            </p>
           ) : (
-            extraHours.map((row) => (
+            schedule.map((row) => (
               <div
                 key={row.id}
                 className="surface-dark flex flex-col gap-2 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -595,7 +458,7 @@ export function FieldAdminPanel({
                 <button
                   type="button"
                   className="shop-chip rounded-xl px-3 py-1.5 text-sm"
-                  onClick={() => removeExtraHours(row.id)}
+                  onClick={() => removeScheduleWindow(row.id)}
                 >
                   حذف
                 </button>

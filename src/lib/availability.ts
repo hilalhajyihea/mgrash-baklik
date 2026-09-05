@@ -6,7 +6,6 @@ import {
   combineDateAndTime,
   dateKeyToDbDate,
   endOfJerusalemDay,
-  getJerusalemDayOfWeek,
   minutesToTime,
   parseTimeToMinutes,
   parseWindowEndMinutes,
@@ -61,12 +60,8 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
 
   const field = await prisma.field.findUnique({
     where: { id: fieldId },
-    include: { workingHours: true },
   });
   if (!field || !field.isActive) return [];
-
-  const dayOfWeek = getJerusalemDayOfWeek(combineDateAndTime(dateKey, "12:00"));
-  const weeklyWindows = field.workingHours.filter((h) => h.dayOfWeek === dayOfWeek);
 
   const dayOff = await prisma.dayOff.findUnique({
     where: {
@@ -75,25 +70,15 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
   });
   if (dayOff) return [];
 
-  const extraWindows = await prisma.extraHours.findMany({
+  /** Schedule is date-specific only (not a recurring weekly template). */
+  const dayWindows = await prisma.extraHours.findMany({
     where: {
       fieldId,
       date: dateKeyToDbDate(dateKey),
     },
     orderBy: { startTime: "asc" },
   });
-
-  const allWindows = [
-    ...weeklyWindows.map((h) => ({
-      startTime: h.startTime,
-      endTime: h.endTime,
-    })),
-    ...extraWindows.map((h) => ({
-      startTime: h.startTime,
-      endTime: h.endTime,
-    })),
-  ];
-  if (allWindows.length === 0) return [];
+  if (dayWindows.length === 0) return [];
 
   const dayStart = startOfJerusalemDay(dateKey);
   const dayEnd = endOfJerusalemDay(dateKey);
@@ -106,13 +91,15 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
     },
   });
 
+  const slotMinutes = field.slotMinutes > 0 ? field.slotMinutes : 90;
+
   const slots = new Set<string>();
-  for (const hours of allWindows) {
+  for (const hours of dayWindows) {
     for (const time of buildSlotsFromWindow({
       dateKey,
       startTime: hours.startTime,
       endTime: hours.endTime,
-      slotMinutes: field.slotMinutes,
+      slotMinutes,
       bookings,
     })) {
       slots.add(time);

@@ -31,9 +31,15 @@ export function isValidHourWindow(startTime: string, endTime: string): boolean {
 }
 
 export function minutesToTime(total: number): string {
-  const h = Math.floor(total / 60);
+  const h = Math.floor(total / 60) % 24;
   const m = total % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+/** Display a booking slot start as "18:00–19:30" for the given length. */
+export function formatSlotRange(startTime: string, slotMinutes: number): string {
+  const end = minutesToTime(parseTimeToMinutes(startTime) + slotMinutes);
+  return `${startTime}–${end}`;
 }
 
 type ZonedParts = {

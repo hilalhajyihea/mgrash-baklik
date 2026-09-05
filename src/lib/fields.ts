@@ -11,16 +11,6 @@ const RESERVED_SLUGS = new Set([
   "favicon.ico",
 ]);
 
-const DEFAULT_HOURS = [
-  { dayOfWeek: 0, startTime: "16:00", endTime: "23:00" },
-  { dayOfWeek: 1, startTime: "16:00", endTime: "23:00" },
-  { dayOfWeek: 2, startTime: "16:00", endTime: "23:00" },
-  { dayOfWeek: 3, startTime: "16:00", endTime: "23:00" },
-  { dayOfWeek: 4, startTime: "16:00", endTime: "23:00" },
-  { dayOfWeek: 5, startTime: "16:00", endTime: "22:00" },
-  { dayOfWeek: 6, startTime: "08:00", endTime: "22:00" },
-];
-
 export function isValidSlug(slug: string) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && !RESERVED_SLUGS.has(slug);
 }
@@ -52,12 +42,9 @@ export async function createField(input: {
       displayName: input.displayName.trim(),
       username: input.username.trim(),
       passwordHash,
-      slotMinutes: input.slotMinutes ?? 60,
+      slotMinutes: input.slotMinutes ?? 90,
       holdMinutes: 15,
       smsPlanEnabled: true,
-      workingHours: {
-        create: DEFAULT_HOURS,
-      },
     },
   });
 }
