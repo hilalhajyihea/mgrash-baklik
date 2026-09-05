@@ -107,6 +107,8 @@ model Booking {
   confirmToken  String    @unique
   holdExpiresAt DateTime?
   confirmedAt   DateTime?
+  /// When the 2-hour-before reminder SMS was sent (null = not yet)
+  reminderSentAt DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -115,4 +117,5 @@ model Booking {
   @@index([fieldId, startsAt])
   @@index([fieldId, status])
   @@index([status, holdExpiresAt])
+  @@index([status, reminderSentAt, startsAt])
 }

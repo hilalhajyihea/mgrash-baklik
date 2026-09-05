@@ -1,4 +1,4 @@
-import { formatDateHe, formatTime } from "@/lib/time";
+import { formatDateHe, formatSlotRange, formatTime } from "@/lib/time";
 import { BRAND } from "@/lib/site";
 
 /** Normalize Israeli / international phones to E.164 (+972...). */
@@ -235,6 +235,22 @@ export function buildConfirmedSms(input: {
     `مرحباً ${input.customerName},`,
     `تم تأكيد الحجز في ${input.fieldName}`,
     `${formatDateHe(input.startsAt)} الساعة ${formatTime(input.startsAt)}`,
+    BRAND,
+  ].join("\n");
+}
+
+export function buildBookingReminderSms(input: {
+  customerName: string;
+  fieldName: string;
+  startsAt: Date;
+  slotMinutes: number;
+}): string {
+  const range = formatSlotRange(formatTime(input.startsAt), input.slotMinutes);
+  return [
+    `مرحباً ${input.customerName},`,
+    `تذكير: حجزكم في ${input.fieldName}`,
+    `اليوم ${formatDateHe(input.startsAt)} الساعة ${range}`,
+    `نراكم قريبًا.`,
     BRAND,
   ].join("\n");
 }

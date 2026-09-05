@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { expireHolds } from "@/lib/availability";
+import { sendDueBookingReminders } from "@/lib/reminders";
 
 function authorize(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -17,7 +18,8 @@ export async function GET(request: Request) {
 
   try {
     const expired = await expireHolds();
-    return NextResponse.json({ ok: true, expired });
+    const reminders = await sendDueBookingReminders();
+    return NextResponse.json({ ok: true, expired, reminders });
   } catch (error) {
     console.error("cron expire-holds error", error);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
