@@ -130,7 +130,6 @@ async function migrateWeeklyHoursToDateSchedule() {
           date: dbDate,
           startTime: w.startTime,
           endTime: w.endTime,
-          note: MIGRATION_NOTE,
         })),
       });
       created += windows.length;
@@ -141,10 +140,17 @@ async function migrateWeeklyHoursToDateSchedule() {
     );
   }
 
+  // Hide migration labels so the schedule looks the same as manually added windows.
+  const cleared = await prisma.extraHours.updateMany({
+    where: { note: MIGRATION_NOTE },
+    data: { note: null },
+  });
+
   console.log(`Date windows created from weekly hours: ${created}`);
   console.log(
     `Auto-migrated windows removed after ${MIGRATE_UNTIL_DATE_KEY}: ${removedAfterCutoff}`,
   );
+  console.log(`Cleared migration notes: ${cleared.count}`);
 }
 
 async function main() {
