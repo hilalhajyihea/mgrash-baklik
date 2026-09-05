@@ -3,6 +3,7 @@ import { buildOwnerNewBookingSms, sendSms, sms019Configured } from "@/lib/sms";
 import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
 import { generateConfirmToken } from "@/lib/tokens";
 import {
+  addDaysToDateKey,
   combineDateAndTime,
   dateKeyToDbDate,
   dbDateToDateKey,
@@ -111,21 +112,27 @@ export async function getAvailableSlots(fieldId: string, dateKey: string) {
 }
 
 /**
- * Public calendar dates: every day the owner scheduled from today onward.
- * Fully booked days still appear; the last chip is the last allocated date.
+ * Public calendar dates: continuous range from today through the owner's
+ * last allocated day (gaps between scheduled days are filled in).
+ * Fully booked days still appear.
  */
 export async function getPublicBookingDateKeys(fieldId: string): Promise<string[]> {
   const todayKey = toDateKey();
   const from = dateKeyToDbDate(todayKey);
 
-  const rows = await prisma.extraHours.findMany({
+  const last = await prisma.extraHours.findFirst({
     where: { fieldId, date: { gte: from } },
+    orderBy: { date: "desc" },
     select: { date: true },
-    distinct: ["date"],
-    orderBy: { date: "asc" },
   });
+  if (!last) return [];
 
-  return rows.map((row) => dbDateToDateKey(row.date));
+  const lastKey = dbDateToDateKey(last.date);
+  const keys: string[] = [];
+  for (let key = todayKey; key <= lastKey; key = addDaysToDateKey(key, 1)) {
+    keys.push(key);
+  }
+  return keys;
 }
 
 export async function createPublicHold(input: {
