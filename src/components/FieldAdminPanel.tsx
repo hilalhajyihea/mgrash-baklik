@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandGraphics";
 import { CompetitionAdminPanel } from "@/components/CompetitionAdminPanel";
+import { Time24Select } from "@/components/Time24Select";
 import {
   combineDateAndTime,
   dbDateToDateKey,
@@ -395,7 +396,8 @@ export function FieldAdminPanel({
               ابنوا الجدول يومًا بيوم: كل فترة تضيفونها هي حجز واحد للزبائن.
               مثلاً 18:00–19:30 فترة، و20:00–21:00 فترة أخرى. يمكن إضافة أكثر من
               فترة في نفس اليوم بدون تداخل. الجدول خاص بكل تاريخ ولا يتكرر
-              للأسبوع التالي تلقائيًا.
+              للأسبوع التالي تلقائيًا. الساعات بنظام 24 ساعة (00:00 = منتصف
+              الليل في نهاية اليوم).
             </p>
             <input
               type="date"
@@ -407,22 +409,14 @@ export function FieldAdminPanel({
             <div className="grid grid-cols-2 gap-2">
               <label className="block text-sm">
                 من
-                <input
-                  type="time"
-                  className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
-                  value={scheduleStart}
-                  onChange={(e) => setScheduleStart(e.target.value)}
-                  required
-                />
+                <Time24Select value={scheduleStart} onChange={setScheduleStart} />
               </label>
               <label className="block text-sm">
                 حتى
-                <input
-                  type="time"
-                  className="shop-field mt-1.5 w-full rounded-xl px-3 py-2.5"
+                <Time24Select
                   value={scheduleEnd}
-                  onChange={(e) => setScheduleEnd(e.target.value)}
-                  required
+                  onChange={setScheduleEnd}
+                  endOfDayHint
                 />
               </label>
             </div>
