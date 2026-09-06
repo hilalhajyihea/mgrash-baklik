@@ -26,7 +26,7 @@ function formatCountdown(ms: number) {
   const hms = [hours, mins, secs]
     .map((n) => String(n).padStart(2, "0"))
     .join(":");
-  return days > 0 ? `${days}ي · ${hms}` : hms;
+  return days > 0 ? `${days} يوم · ${hms}` : hms;
 }
 
 export function CompetitionBanner({
