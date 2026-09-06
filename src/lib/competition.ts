@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { normalizePhoneE164 } from "@/lib/sms";
 
+export type WinMode = "FIRST" | "ALL_WHO_REACH";
+
 export type CompetitionPublicView = {
   id: string;
   title: string;
@@ -8,8 +10,10 @@ export type CompetitionPublicView = {
   prizeText: string;
   endsAt: string;
   status: "ACTIVE" | "PAUSED" | "ENDED";
+  winMode: WinMode;
   winnerName: string | null;
   wonAt: string | null;
+  winners: { displayName: string; points: number }[];
   leaderboard: { displayName: string; points: number }[];
 };
 
@@ -18,6 +22,10 @@ function phoneKeyFromRaw(raw: string): string | null {
   if (e164) return e164;
   const digits = raw.replace(/\D/g, "");
   return digits.length >= 9 ? digits : null;
+}
+
+function asWinMode(raw: string | null | undefined): WinMode {
+  return raw === "ALL_WHO_REACH" ? "ALL_WHO_REACH" : "FIRST";
 }
 
 async function expireIfPast(competitionId: string, endsAt: Date, status: string) {
@@ -56,11 +64,29 @@ export async function getCompetitionPublicView(
   if (!competition) return null;
   if (competition.status === "DRAFT") return null;
 
+  const winMode = asWinMode(competition.winMode);
+
   const entries = await prisma.competitionEntry.findMany({
     where: { competitionId: competition.id },
     orderBy: [{ points: "desc" }, { displayName: "asc" }],
-    take: 10,
+    take: 20,
   });
+
+  const winners =
+    winMode === "ALL_WHO_REACH"
+      ? entries
+          .filter((e) => e.points >= competition.goalPoints)
+          .map((e) => ({ displayName: e.displayName, points: e.points }))
+      : competition.winnerName
+        ? [
+            {
+              displayName: competition.winnerName,
+              points:
+                entries.find((e) => e.displayName === competition.winnerName)
+                  ?.points ?? competition.goalPoints,
+            },
+          ]
+        : [];
 
   return {
     id: competition.id,
@@ -69,16 +95,18 @@ export async function getCompetitionPublicView(
     prizeText: competition.prizeText,
     endsAt: competition.endsAt.toISOString(),
     status: competition.status as "ACTIVE" | "PAUSED" | "ENDED",
+    winMode,
     winnerName: competition.winnerName,
     wonAt: competition.wonAt?.toISOString() ?? null,
-    leaderboard: entries.map((e) => ({
+    winners,
+    leaderboard: entries.slice(0, 10).map((e) => ({
       displayName: e.displayName,
       points: e.points,
     })),
   };
 }
 
-async function declareWinner(input: {
+async function declareFirstWinner(input: {
   competitionId: string;
   phoneKey: string;
   displayName: string;
@@ -121,6 +149,8 @@ export async function awardCompetitionPointForBooking(input: {
   });
   if (existingEvent) return { awarded: false as const };
 
+  const winMode = asWinMode(competition.winMode);
+
   const result = await prisma.$transaction(async (tx) => {
     let entry = await tx.competitionEntry.findUnique({
       where: {
@@ -161,8 +191,8 @@ export async function awardCompetitionPointForBooking(input: {
     return updated;
   });
 
-  if (result.points >= competition.goalPoints) {
-    await declareWinner({
+  if (result.points >= competition.goalPoints && winMode === "FIRST") {
+    await declareFirstWinner({
       competitionId: competition.id,
       phoneKey,
       displayName: result.displayName,
@@ -170,7 +200,11 @@ export async function awardCompetitionPointForBooking(input: {
     return { awarded: true as const, won: true as const, points: result.points };
   }
 
-  return { awarded: true as const, won: false as const, points: result.points };
+  return {
+    awarded: true as const,
+    won: result.points >= competition.goalPoints,
+    points: result.points,
+  };
 }
 
 /** −1 point when a confirmed booking is cancelled (if it had awarded a point). */
@@ -189,7 +223,6 @@ export async function revokeCompetitionPointForBooking(input: {
     return { revoked: false as const };
   }
 
-  // Already reversed for this booking?
   const alreadyCancelled = await prisma.competitionEvent.findFirst({
     where: {
       competitionId: awardEvent.competitionId,
@@ -264,3 +297,5 @@ export async function listFieldCompetitions(fieldId: string) {
     },
   });
 }
+
+export { asWinMode };

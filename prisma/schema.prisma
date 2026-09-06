@@ -130,6 +130,8 @@ model Competition {
   endsAt        DateTime
   /// DRAFT | ACTIVE | PAUSED | ENDED
   status        String    @default("DRAFT")
+  /// FIRST = first to goal wins and ends; ALL_WHO_REACH = everyone who hits goal before endsAt
+  winMode       String    @default("FIRST")
   winnerPhone   String?
   winnerName    String?
   wonAt         DateTime?

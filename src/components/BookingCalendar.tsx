@@ -24,8 +24,10 @@ type Props = {
     prizeText: string;
     endsAt: string;
     status: "ACTIVE" | "PAUSED" | "ENDED";
+    winMode: "FIRST" | "ALL_WHO_REACH";
     winnerName: string | null;
     wonAt: string | null;
+    winners: { displayName: string; points: number }[];
     leaderboard: { displayName: string; points: number }[];
   } | null;
 };

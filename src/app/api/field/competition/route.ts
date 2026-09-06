@@ -2,14 +2,18 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireFieldSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { listFieldCompetitions } from "@/lib/competition";
+import { asWinMode, listFieldCompetitions } from "@/lib/competition";
 import {
   buildCompetitionPrizeSms,
   sendSms,
   sms019Configured,
 } from "@/lib/sms";
 import { consumeFieldSmsQuota, refundFieldSmsQuota } from "@/lib/smsQuota";
-import { endOfJerusalemDay } from "@/lib/time";
+import { endOfJerusalemDay, toDateKey } from "@/lib/time";
+
+function endsAtDateKey(endsAt: Date) {
+  return toDateKey(new Date(endsAt.getTime() - 1000));
+}
 
 export async function GET() {
   const session = await requireFieldSession();
@@ -25,7 +29,9 @@ export async function GET() {
       goalPoints: c.goalPoints,
       prizeText: c.prizeText,
       endsAt: c.endsAt.toISOString(),
+      endsAtDate: endsAtDateKey(c.endsAt),
       status: c.status,
+      winMode: asWinMode(c.winMode),
       winnerName: c.winnerName,
       winnerPhone: c.winnerPhone,
       wonAt: c.wonAt?.toISOString() ?? null,
@@ -41,11 +47,14 @@ export async function GET() {
   });
 }
 
+const winModeSchema = z.enum(["FIRST", "ALL_WHO_REACH"]);
+
 const createSchema = z.object({
   title: z.string().min(2).max(80),
   goalPoints: z.number().int().min(1).max(100),
   prizeText: z.string().min(2).max(200),
   endsAtDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  winMode: winModeSchema.optional(),
   activate: z.boolean().optional(),
 });
 
@@ -89,6 +98,7 @@ export async function POST(request: Request) {
       goalPoints: parsed.data.goalPoints,
       prizeText: parsed.data.prizeText.trim(),
       endsAt,
+      winMode: parsed.data.winMode ?? "FIRST",
       status: activate ? "ACTIVE" : "DRAFT",
     },
   });
@@ -98,6 +108,7 @@ export async function POST(request: Request) {
       id: competition.id,
       title: competition.title,
       status: competition.status,
+      winMode: competition.winMode,
     },
   });
 }
@@ -108,6 +119,7 @@ const patchSchema = z.object({
   goalPoints: z.number().int().min(1).max(100).optional(),
   prizeText: z.string().min(2).max(200).optional(),
   endsAtDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  winMode: winModeSchema.optional(),
   status: z.enum(["ACTIVE", "PAUSED", "ENDED", "DRAFT"]).optional(),
   prizeRedeemed: z.boolean().optional(),
   adjustEntryId: z.string().min(1).optional(),
@@ -149,6 +161,8 @@ export async function PATCH(request: Request) {
     }
   }
 
+  const winMode = asWinMode(parsed.data.winMode ?? existing.winMode);
+
   if (
     parsed.data.adjustEntryId &&
     typeof parsed.data.adjustDelta === "number" &&
@@ -183,7 +197,8 @@ export async function PATCH(request: Request) {
 
     if (
       nextPoints >= existing.goalPoints &&
-      existing.status === "ACTIVE"
+      existing.status === "ACTIVE" &&
+      winMode === "FIRST"
     ) {
       await prisma.competition.update({
         where: { id: existing.id },
@@ -204,6 +219,7 @@ export async function PATCH(request: Request) {
     goalPoints?: number;
     prizeText?: string;
     endsAt?: Date;
+    winMode?: string;
     status?: string;
     prizeRedeemed?: boolean;
   } = {};
@@ -214,6 +230,7 @@ export async function PATCH(request: Request) {
   if (parsed.data.endsAtDate) {
     data.endsAt = endOfJerusalemDay(parsed.data.endsAtDate);
   }
+  if (parsed.data.winMode) data.winMode = parsed.data.winMode;
   if (parsed.data.status) data.status = parsed.data.status;
   if (parsed.data.prizeRedeemed !== undefined) {
     data.prizeRedeemed = parsed.data.prizeRedeemed;
@@ -227,23 +244,39 @@ export async function PATCH(request: Request) {
     data,
   });
 
-  if (
-    markingRedeemed &&
-    existing.winnerPhone &&
-    existing.winnerName &&
-    sms019Configured()
-  ) {
+  if (markingRedeemed && sms019Configured()) {
     const field = await prisma.field.findUnique({
       where: { id: session.fieldId },
       select: { displayName: true, smsPlanEnabled: true },
     });
     if (field?.smsPlanEnabled) {
-      const quota = await consumeFieldSmsQuota(session.fieldId);
-      if (quota.ok) {
+      const mode = asWinMode(existing.winMode);
+      const recipients: { name: string; phone: string }[] = [];
+
+      if (mode === "FIRST" && existing.winnerPhone && existing.winnerName) {
+        recipients.push({
+          name: existing.winnerName,
+          phone: existing.winnerPhone,
+        });
+      } else if (mode === "ALL_WHO_REACH") {
+        const winners = await prisma.competitionEntry.findMany({
+          where: {
+            competitionId: existing.id,
+            points: { gte: existing.goalPoints },
+          },
+        });
+        for (const w of winners) {
+          recipients.push({ name: w.displayName, phone: w.phoneKey });
+        }
+      }
+
+      for (const r of recipients) {
+        const quota = await consumeFieldSmsQuota(session.fieldId);
+        if (!quota.ok) break;
         const sms = await sendSms(
-          existing.winnerPhone,
+          r.phone,
           buildCompetitionPrizeSms({
-            winnerName: existing.winnerName,
+            winnerName: r.name,
             fieldName: field.displayName,
             competitionTitle: existing.title,
             prizeText: existing.prizeText,

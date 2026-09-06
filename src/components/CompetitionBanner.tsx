@@ -9,8 +9,10 @@ type CompetitionPublicView = {
   prizeText: string;
   endsAt: string;
   status: "ACTIVE" | "PAUSED" | "ENDED";
+  winMode: "FIRST" | "ALL_WHO_REACH";
   winnerName: string | null;
   wonAt: string | null;
+  winners: { displayName: string; points: number }[];
   leaderboard: { displayName: string; points: number }[];
 };
 
@@ -47,6 +49,11 @@ export function CompetitionBanner({
   const ended =
     competition.status === "ENDED" || remainingMs <= 0;
 
+  const ruleText =
+    competition.winMode === "ALL_WHO_REACH"
+      ? `كل من يحجز ${competition.goalPoints} مرات مؤكَّدة خلال الفترة يحصل على: ${competition.prizeText}`
+      : `أول من يحجز ${competition.goalPoints} مرات مؤكَّدة يحصل على: ${competition.prizeText}`;
+
   return (
     <div className="surface-dark mt-6 rounded-2xl p-5 sm:p-6">
       <p className="text-xs font-semibold tracking-[0.2em] text-[var(--lime)]">
@@ -55,17 +62,25 @@ export function CompetitionBanner({
       <h2 className="font-display mt-2 text-2xl text-[var(--cream)]">
         {competition.title}
       </h2>
-      <p className="mt-2 text-sm text-[rgba(244,248,238,0.78)]">
-        احجزوا {competition.goalPoints} مرات مؤكَّدة واحصلوا على:{" "}
-        {competition.prizeText}
-      </p>
+      <p className="mt-2 text-sm text-[rgba(244,248,238,0.78)]">{ruleText}</p>
 
       {ended ? (
-        <p className="mt-4 text-base font-semibold text-[var(--lime)]">
-          {competition.winnerName
-            ? `انتهت المسابقة — الفائز: ${competition.winnerName}`
-            : "انتهت المسابقة"}
-        </p>
+        <div className="mt-4 text-base font-semibold text-[var(--lime)]">
+          {competition.winners.length > 0 ? (
+            <>
+              <p>انتهت المسابقة — الفائزون:</p>
+              <ul className="mt-1 space-y-0.5 font-normal">
+                {competition.winners.map((w) => (
+                  <li key={w.displayName}>• {w.displayName}</li>
+                ))}
+              </ul>
+            </>
+          ) : competition.winnerName ? (
+            <p>{`انتهت المسابقة — الفائز: ${competition.winnerName}`}</p>
+          ) : (
+            <p>انتهت المسابقة</p>
+          )}
+        </div>
       ) : competition.status === "PAUSED" ? (
         <p className="mt-4 text-sm text-[rgba(244,248,238,0.62)]">
           المسابقة متوقفة مؤقتًا.
@@ -76,12 +91,22 @@ export function CompetitionBanner({
         </p>
       )}
 
+      {!ended &&
+      competition.winMode === "ALL_WHO_REACH" &&
+      competition.winners.length > 0 ? (
+        <p className="mt-3 text-sm text-[var(--lime)]">
+          وصلوا للهدف حتى الآن:{" "}
+          {competition.winners.map((w) => w.displayName).join("، ")}
+        </p>
+      ) : null}
+
       {competition.leaderboard.length > 0 ? (
         <ol className="mt-5 space-y-1.5 text-sm text-[rgba(244,248,238,0.85)]">
           {competition.leaderboard.slice(0, 5).map((row, i) => (
             <li key={`${row.displayName}-${i}`} className="flex justify-between gap-3">
               <span>
                 {i + 1}. {row.displayName}
+                {row.points >= competition.goalPoints ? " ✓" : ""}
               </span>
               <span className="text-[var(--lime)]">
                 {row.points}/{competition.goalPoints}
