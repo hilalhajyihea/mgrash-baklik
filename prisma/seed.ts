@@ -113,11 +113,6 @@ async function migrateWeeklyHoursToDateSchedule() {
       const windows = byDow.get(dow) || [];
       if (windows.length === 0) continue;
 
-      const dayOff = await prisma.dayOff.findUnique({
-        where: { fieldId_date: { fieldId: field.id, date: dbDate } },
-      });
-      if (dayOff) continue;
-
       const existing = await prisma.extraHours.findMany({
         where: { fieldId: field.id, date: dbDate },
       });

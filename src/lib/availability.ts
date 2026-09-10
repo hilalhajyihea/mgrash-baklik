@@ -61,13 +61,6 @@ export async function getAvailableSlots(
   });
   if (!field || !field.isActive) return [];
 
-  const dayOff = await prisma.dayOff.findUnique({
-    where: {
-      fieldId_date: { fieldId, date: dateKeyToDbDate(dateKey) },
-    },
-  });
-  if (dayOff) return [];
-
   /** Each ExtraHours row is one bookable window (owner-defined length). */
   const dayWindows = await prisma.extraHours.findMany({
     where: {

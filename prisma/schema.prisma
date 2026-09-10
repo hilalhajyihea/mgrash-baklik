@@ -35,7 +35,6 @@ model Field {
   updatedAt      DateTime @updatedAt
 
   workingHours WorkingHours[]
-  dayOffs      DayOff[]
   smsUsage     SmsMonthlyUsage[]
   extraHours   ExtraHours[]
   bookings     Booking[]
@@ -53,18 +52,6 @@ model WorkingHours {
   field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
   @@index([fieldId, dayOfWeek])
-  @@index([fieldId])
-}
-
-model DayOff {
-  id      String   @id @default(cuid())
-  fieldId String
-  date    DateTime @db.Date
-  note    String?
-
-  field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-
-  @@unique([fieldId, date])
   @@index([fieldId])
 }
 

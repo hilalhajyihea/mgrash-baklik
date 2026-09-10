@@ -153,6 +153,13 @@ export function addDaysToDateKey(dateKey: string, days: number): string {
   return toDateKey(new Date(start.getTime() + days * 24 * 60 * 60 * 1000));
 }
 
+/** Sunday (0) of the Israel week that contains dateKey. */
+export function sundayOfWeek(dateKey: string = toDateKey()): string {
+  const noon = combineDateAndTime(dateKey, "12:00");
+  const dow = getJerusalemDayOfWeek(noon);
+  return addDaysToDateKey(dateKey, -dow);
+}
+
 export function startOfJerusalemDay(dateKey?: string): Date {
   return combineDateAndTime(dateKey ?? toDateKey(), "00:00");
 }

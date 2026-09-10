@@ -8,7 +8,6 @@ import { CompetitionAdminPanel } from "@/components/CompetitionAdminPanel";
 import { Time24Select } from "@/components/Time24Select";
 import {
   combineDateAndTime,
-  dbDateToDateKey,
   formatDateHe,
   formatTime,
   formatTimeRange,
@@ -23,12 +22,6 @@ type Booking = {
   customerPhone: string;
   status: string;
   source: string;
-};
-
-type DayOff = {
-  id: string;
-  date: string;
-  note: string | null;
 };
 
 type ScheduleWindow = {
@@ -50,7 +43,7 @@ export function FieldAdminPanel({
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<
-    "bookings" | "book" | "schedule" | "daysOff" | "competition" | "sms"
+    "bookings" | "book" | "schedule" | "competition" | "sms"
   >("bookings");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [ownerPhone, setOwnerPhone] = useState("");
@@ -60,14 +53,11 @@ export function FieldAdminPanel({
   const [smsMonthlyRemaining, setSmsMonthlyRemaining] = useState<
     number | null
   >(null);
-  const [dayOffs, setDayOffs] = useState<DayOff[]>([]);
   const [schedule, setSchedule] = useState<ScheduleWindow[]>([]);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleStart, setScheduleStart] = useState("18:00");
   const [scheduleEnd, setScheduleEnd] = useState("19:30");
   const [scheduleNote, setScheduleNote] = useState("");
-  const [offDate, setOffDate] = useState("");
-  const [offNote, setOffNote] = useState("");
   const [bookDate, setBookDate] = useState(toDateKey());
   const [bookTime, setBookTime] = useState("");
   const [bookName, setBookName] = useState("");
@@ -80,9 +70,8 @@ export function FieldAdminPanel({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [bRes, dRes, eRes, sRes] = await Promise.all([
+      const [bRes, eRes, sRes] = await Promise.all([
         fetch("/api/field/bookings"),
-        fetch("/api/field/days-off"),
         fetch("/api/field/extra-hours"),
         fetch("/api/field/sms-settings"),
       ]);
@@ -91,11 +80,9 @@ export function FieldAdminPanel({
         return;
       }
       const bData = await bRes.json();
-      const dData = await dRes.json();
       const eData = await eRes.json();
       const sData = await sRes.json();
       setBookings(bData.bookings || []);
-      setDayOffs(dData.dayOffs || []);
       setSchedule(eData.extraHours || []);
       setOwnerPhone(sData.phone || "");
       setSmsPlanEnabled(!!sData.smsPlanEnabled);
@@ -189,29 +176,29 @@ export function FieldAdminPanel({
     load();
   }
 
-  async function addDayOff(e: FormEvent) {
-    e.preventDefault();
-    const res = await fetch("/api/field/days-off", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: offDate, note: offNote }),
-    });
-    if (!res.ok) {
-      setError("فشل إضافة يوم إغلاق");
+  async function copyWeekToNext() {
+    setError("");
+    setMessage("");
+    if (
+      !confirm(
+        "نسخ جدول هذا الأسبوع (الأحد–السبت) إلى الأسبوع القادم؟ الأيام التي فيها جدول مسبقًا لن تُستبدل.",
+      )
+    ) {
       return;
     }
-    setOffDate("");
-    setOffNote("");
-    setMessage("أُضيف يوم إغلاق");
-    load();
-  }
-
-  async function removeDayOff(id: string) {
-    await fetch("/api/field/days-off", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+    const res = await fetch("/api/field/extra-hours/copy-week", {
+      method: "POST",
     });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "فشل النسخ");
+      return;
+    }
+    const skipped =
+      data.skippedDays > 0
+        ? ` · تُجاهل ${data.skippedDays} يوم كان فيه جدول`
+        : "";
+    setMessage(`تم نسخ ${data.copied} فترة إلى الأسبوع القادم${skipped}`);
     load();
   }
 
@@ -255,7 +242,6 @@ export function FieldAdminPanel({
     { id: "bookings" as const, label: "حجوزات" },
     { id: "book" as const, label: "إضافة حجز" },
     { id: "schedule" as const, label: "جدول الساعات" },
-    { id: "daysOff" as const, label: "أيام الإغلاق" },
     { id: "competition" as const, label: "مسابقة" },
     { id: "sms" as const, label: "SMS" },
   ];
@@ -391,6 +377,19 @@ export function FieldAdminPanel({
 
       {tab === "schedule" ? (
         <div className="mt-6 space-y-4">
+          <div className="surface-dark space-y-3 rounded-2xl p-5">
+            <p className="text-sm text-[rgba(244,248,238,0.62)]">
+              نسخ كل فترات هذا الأسبوع (الأحد–السبت) إلى نفس الأيام في الأسبوع
+              القادم. الأيام التي فيها جدول مسبقًا لن تُستبدل.
+            </p>
+            <button
+              type="button"
+              onClick={copyWeekToNext}
+              className="w-full rounded-xl border border-white/25 bg-black/25 px-4 py-3 font-semibold transition hover:bg-black/40"
+            >
+              نسخ هذا الأسبوع إلى الأسبوع القادم
+            </button>
+          </div>
           <form onSubmit={addScheduleWindow} className="surface-dark space-y-3 rounded-2xl p-5">
             <p className="text-sm text-[rgba(244,248,238,0.62)]">
               ابنوا الجدول يومًا بيوم: كل فترة تضيفونها هي حجز واحد للزبائن.
@@ -459,49 +458,6 @@ export function FieldAdminPanel({
               </div>
             ))
           )}
-        </div>
-      ) : null}
-
-      {tab === "daysOff" ? (
-        <div className="mt-6 space-y-4">
-          <form onSubmit={addDayOff} className="surface-dark space-y-3 rounded-2xl p-5">
-            <input
-              type="date"
-              className="shop-field w-full rounded-xl px-3 py-2.5"
-              value={offDate}
-              onChange={(e) => setOffDate(e.target.value)}
-              required
-            />
-            <input
-              className="shop-field w-full rounded-xl px-3 py-2.5"
-              placeholder="ملاحظة (اختياري)"
-              value={offNote}
-              onChange={(e) => setOffNote(e.target.value)}
-            />
-            <button type="submit" className="btn-primary w-full rounded-xl py-3 font-semibold">
-              إغلاق يوم
-            </button>
-          </form>
-          {dayOffs.map((d) => (
-            <div
-              key={d.id}
-              className="surface-dark flex items-center justify-between rounded-2xl p-4"
-            >
-              <p>
-                {formatDateHe(
-                  combineDateAndTime(dbDateToDateKey(new Date(d.date)), "12:00"),
-                )}
-                {d.note ? ` · ${d.note}` : ""}
-              </p>
-              <button
-                type="button"
-                className="shop-chip rounded-xl px-3 py-1.5 text-sm"
-                onClick={() => removeDayOff(d.id)}
-              >
-                حذف
-              </button>
-            </div>
-          ))}
         </div>
       ) : null}
 
