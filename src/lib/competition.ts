@@ -69,7 +69,6 @@ export async function getCompetitionPublicView(
   const entries = await prisma.competitionEntry.findMany({
     where: { competitionId: competition.id },
     orderBy: [{ points: "desc" }, { displayName: "asc" }],
-    take: 20,
   });
 
   const winners =
@@ -99,7 +98,7 @@ export async function getCompetitionPublicView(
     winnerName: competition.winnerName,
     wonAt: competition.wonAt?.toISOString() ?? null,
     winners,
-    leaderboard: entries.slice(0, 10).map((e) => ({
+    leaderboard: entries.map((e) => ({
       displayName: e.displayName,
       points: e.points,
     })),

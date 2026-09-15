@@ -102,7 +102,7 @@ export function CompetitionBanner({
 
       {competition.leaderboard.length > 0 ? (
         <ol className="mt-5 space-y-1.5 text-sm text-[rgba(244,248,238,0.85)]">
-          {competition.leaderboard.slice(0, 5).map((row, i) => (
+          {competition.leaderboard.map((row, i) => (
             <li key={`${row.displayName}-${i}`} className="flex justify-between gap-3">
               <span>
                 {i + 1}. {row.displayName}
