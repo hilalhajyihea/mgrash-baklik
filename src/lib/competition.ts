@@ -67,7 +67,7 @@ export async function getCompetitionPublicView(
   const winMode = asWinMode(competition.winMode);
 
   const entries = await prisma.competitionEntry.findMany({
-    where: { competitionId: competition.id },
+    where: { competitionId: competition.id, points: { gt: 0 } },
     orderBy: [{ points: "desc" }, { displayName: "asc" }],
   });
 
