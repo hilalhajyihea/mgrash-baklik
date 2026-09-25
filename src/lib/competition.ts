@@ -98,7 +98,7 @@ export async function getCompetitionPublicView(
     winnerName: competition.winnerName,
     wonAt: competition.wonAt?.toISOString() ?? null,
     winners,
-    leaderboard: entries.map((e) => ({
+    leaderboard: entries.slice(0, 5).map((e) => ({
       displayName: e.displayName,
       points: e.points,
     })),

@@ -101,19 +101,22 @@ export function CompetitionBanner({
       ) : null}
 
       {competition.leaderboard.length > 0 ? (
-        <ol className="mt-5 space-y-1.5 text-sm text-[rgba(244,248,238,0.85)]">
-          {competition.leaderboard.map((row, i) => (
-            <li key={`${row.displayName}-${i}`} className="flex justify-between gap-3">
-              <span>
-                {i + 1}. {row.displayName}
-                {row.points >= competition.goalPoints ? " ✓" : ""}
-              </span>
-              <span className="text-[var(--lime)]">
-                {row.points}/{competition.goalPoints}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <div className="mt-5">
+          <p className="text-sm font-semibold text-[var(--cream)]">أفضل 5:</p>
+          <ol className="mt-1.5 space-y-1.5 text-sm text-[rgba(244,248,238,0.85)]">
+            {competition.leaderboard.map((row, i) => (
+              <li key={`${row.displayName}-${i}`} className="flex justify-between gap-3">
+                <span>
+                  {i + 1}. {row.displayName}
+                  {row.points >= competition.goalPoints ? " ✓" : ""}
+                </span>
+                <span className="text-[var(--lime)]">
+                  {row.points}/{competition.goalPoints}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
       ) : (
         <p className="mt-4 text-sm text-[rgba(244,248,238,0.55)]">
           لا مشاركين بعد — كونوا الأوائل!
