@@ -63,6 +63,7 @@ export async function POST(
         booking.field.phone,
         buildOwnerCancelSms({
           customerName: booking.customerName,
+          customerPhone: booking.customerPhone,
           fieldName: booking.field.displayName,
           startsAt: booking.startsAt,
         }),

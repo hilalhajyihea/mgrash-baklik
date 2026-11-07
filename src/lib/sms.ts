@@ -189,6 +189,7 @@ export function buildHoldConfirmSms(input: {
 
 export function buildOwnerCancelSms(input: {
   customerName: string;
+  customerPhone: string;
   fieldName: string;
   startsAt: Date;
 }): string {
@@ -196,6 +197,7 @@ export function buildOwnerCancelSms(input: {
     `إلغاء حجز في ${input.fieldName}`,
     `${formatDateHe(input.startsAt)} الساعة ${formatTime(input.startsAt)}`,
     `الزبون: ${input.customerName}`,
+    `الهاتف: ${input.customerPhone || "—"}`,
     BRAND,
   ].join("\n");
 }
